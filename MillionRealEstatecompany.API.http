@@ -1,6 +1,223 @@
-@MillionRealEstatecompany.API_HostAddress = http://localhost:5285
+# Million Real Estate Company API - REST Client Examples
 
-GET {{MillionRealEstatecompany.API_HostAddress}}/weatherforecast/
-Accept: application/json
+@MillionRealEstatecompany.API_HostAddress = http://localhost:8080
+@ContentType = application/json
 
-###
+### ==== DATA SEEDER ====
+
+# Verificar estado de la base de datos
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/dataseeder/status
+Accept: {{ContentType}}
+
+### Cargar datos iniciales
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/dataseeder/seed?force=false
+Accept: {{ContentType}}
+
+### ==== OWNERS (PROPIETARIOS) ====
+
+# Obtener todos los propietarios
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Accept: {{ContentType}}
+
+### Obtener propietario por ID
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/owners/1
+Accept: {{ContentType}}
+
+### Crear nuevo propietario
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "name": "Juan Carlos Rodríguez",
+  "address": "Carrera 15 #85-40, Chapinero, Bogotá",
+  "photo": "https://example.com/photos/juan-carlos.jpg",
+  "birthday": "1985-03-15T00:00:00Z"
+}
+
+### Actualizar propietario
+PUT {{MillionRealEstatecompany.API_HostAddress}}/api/owners/1
+Content-Type: {{ContentType}}
+
+{
+  "idOwner": 1,
+  "name": "Juan Carlos Rodríguez Actualizado",
+  "address": "Carrera 15 #85-40, Chapinero, Bogotá",
+  "photo": "https://example.com/photos/juan-carlos-updated.jpg",
+  "birthday": "1985-03-15T00:00:00Z"
+}
+
+### Eliminar propietario
+DELETE {{MillionRealEstatecompany.API_HostAddress}}/api/owners/1
+Accept: {{ContentType}}
+
+### ==== PROPERTIES (PROPIEDADES) ====
+
+# Obtener todas las propiedades
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/properties
+Accept: {{ContentType}}
+
+### Obtener propiedad por ID
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/properties/1
+Accept: {{ContentType}}
+
+### Crear nueva propiedad
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/properties
+Content-Type: {{ContentType}}
+
+{
+  "name": "Apartamento Luxury Vista",
+  "address": "Calle 93 #11-28, Chapinero Norte, Bogotá",
+  "price": 850000000,
+  "codeInternal": "APT-LUX-001",
+  "year": 2020,
+  "idOwner": 1
+}
+
+### Actualizar propiedad
+PUT {{MillionRealEstatecompany.API_HostAddress}}/api/properties/1
+Content-Type: {{ContentType}}
+
+{
+  "idProperty": 1,
+  "name": "Apartamento Luxury Vista Actualizado",
+  "address": "Calle 93 #11-28, Chapinero Norte, Bogotá",
+  "price": 900000000,
+  "codeInternal": "APT-LUX-001",
+  "year": 2020,
+  "idOwner": 1
+}
+
+### Eliminar propiedad
+DELETE {{MillionRealEstatecompany.API_HostAddress}}/api/properties/1
+Accept: {{ContentType}}
+
+### ==== PROPERTY IMAGES (IMÁGENES) ====
+
+# Obtener todas las imágenes
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages
+Accept: {{ContentType}}
+
+### Obtener imágenes de una propiedad específica
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages/property/1
+Accept: {{ContentType}}
+
+### Obtener imagen por ID
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages/1
+Accept: {{ContentType}}
+
+### Crear nueva imagen
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages
+Content-Type: {{ContentType}}
+
+{
+  "idProperty": 1,
+  "file": "https://example.com/images/property-1-facade.jpg",
+  "enabled": true
+}
+
+### Actualizar imagen
+PUT {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages/1
+Content-Type: {{ContentType}}
+
+{
+  "idPropertyImage": 1,
+  "idProperty": 1,
+  "file": "https://example.com/images/property-1-facade-updated.jpg",
+  "enabled": true
+}
+
+### Eliminar imagen
+DELETE {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages/1
+Accept: {{ContentType}}
+
+### ==== PROPERTY TRACES (TRAZABILIDAD) ====
+
+# Obtener todas las trazas
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces
+Accept: {{ContentType}}
+
+### Obtener trazas de una propiedad específica
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces/property/1
+Accept: {{ContentType}}
+
+### Obtener traza por ID
+GET {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces/1
+Accept: {{ContentType}}
+
+### Crear nueva traza de precio
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces
+Content-Type: {{ContentType}}
+
+{
+  "dateSale": "2024-01-15T10:30:00Z",
+  "name": "Actualización de precio por valorización",
+  "value": 920000000,
+  "tax": 46000000,
+  "idProperty": 1
+}
+
+### Actualizar traza
+PUT {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces/1
+Content-Type: {{ContentType}}
+
+{
+  "idPropertyTrace": 1,
+  "dateSale": "2024-01-15T10:30:00Z",
+  "name": "Actualización de precio por valorización - Modificada",
+  "value": 950000000,
+  "tax": 47500000,
+  "idProperty": 1
+}
+
+### Eliminar traza
+DELETE {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces/1
+Accept: {{ContentType}}
+
+### ==== EJEMPLOS COMBINADOS ====
+
+# Flujo completo: Crear propietario -> propiedad -> imagen -> traza
+### 1. Crear propietario
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "name": "María Elena Gómez",
+  "address": "Calle 127 #15-35, Usaquén, Bogotá",
+  "photo": "https://example.com/photos/maria-elena.jpg",
+  "birthday": "1978-08-22T00:00:00Z"
+}
+
+### 2. Crear propiedad para el propietario creado
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/properties
+Content-Type: {{ContentType}}
+
+{
+  "name": "Casa Campestre Los Rosales",
+  "address": "Km 4 Vía La Calera, Cundinamarca",
+  "price": 1200000000,
+  "codeInternal": "CASA-CAMP-002",
+  "year": 2018,
+  "idOwner": 6
+}
+
+### 3. Agregar imagen a la propiedad
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages
+Content-Type: {{ContentType}}
+
+{
+  "idProperty": 9,
+  "file": "https://example.com/images/casa-campestre-exterior.jpg",
+  "enabled": true
+}
+
+### 4. Crear traza de precio inicial
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces
+Content-Type: {{ContentType}}
+
+{
+  "dateSale": "2024-01-20T14:00:00Z",
+  "name": "Precio inicial de registro",
+  "value": 1200000000,
+  "tax": 60000000,
+  "idProperty": 9
+}

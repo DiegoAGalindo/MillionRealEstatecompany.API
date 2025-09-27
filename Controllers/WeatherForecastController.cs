@@ -1,33 +1,123 @@
 using Microsoft.AspNetCore.Mvc;
+using MillionRealEstatecompany.API.DTOs;
+using MillionRealEstatecompany.API.Interfaces;
 
-namespace MillionRealEstatecompany.API.Controllers
+namespace MillionRealEstatecompany.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class OwnersController : ControllerBase
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    private readonly IOwnerService _ownerService;
+    private readonly ILogger<OwnersController> _logger;
+
+    public OwnersController(IOwnerService ownerService, ILogger<OwnersController> logger)
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        _ownerService = ownerService;
+        _logger = logger;
+    }
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    /// <summary>
+    /// Get all owners
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<OwnerDto>>> GetAllOwners()
+    {
+        try
         {
-            _logger = logger;
+            var owners = await _ownerService.GetAllOwnersAsync();
+            return Ok(owners);
         }
-
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        catch (Exception ex)
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+            _logger.LogError(ex, "Error getting all owners");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    /// <summary>
+    /// Get owner by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<OwnerDto>> GetOwner(int id)
+    {
+        try
+        {
+            var owner = await _ownerService.GetOwnerByIdAsync(id);
+            if (owner == null)
+                return NotFound();
+            
+            return Ok(owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting owner with id {Id}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    /// <summary>
+    /// Create a new owner
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<OwnerDto>> CreateOwner(CreateOwnerDto createOwnerDto)
+    {
+        try
+        {
+            var owner = await _ownerService.CreateOwnerAsync(createOwnerDto);
+            return CreatedAtAction(nameof(GetOwner), new { id = owner.IdOwner }, owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating owner");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    /// <summary>
+    /// Update an existing owner
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<OwnerDto>> UpdateOwner(int id, UpdateOwnerDto updateOwnerDto)
+    {
+        try
+        {
+            var owner = await _ownerService.UpdateOwnerAsync(id, updateOwnerDto);
+            if (owner == null)
+                return NotFound();
+            
+            return Ok(owner);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating owner with id {Id}", id);
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    /// <summary>
+    /// Delete an owner
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteOwner(int id)
+    {
+        try
+        {
+            var result = await _ownerService.DeleteOwnerAsync(id);
+            if (!result)
+                return NotFound();
+            
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Cannot delete owner with id {Id}", id);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting owner with id {Id}", id);
+            return StatusCode(500, "Internal server error");
         }
     }
 }

@@ -9,6 +9,7 @@ obj/
 # IDE and editor files
 .vscode/
 .vs/
+.github/
 
 # NuGet packages
 packages/
