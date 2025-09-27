@@ -1,0 +1,49 @@
+# Binaries and build outputs
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+
+# IDE and editor files
+.vscode/
+.vs/
+
+# NuGet packages
+packages/
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Operating System files
+Thumbs.db
+.DS_Store
+
+# Test results
+TestResults/
+
+# Rider
+.idea/
+
+# ReSharper
+_ReSharper/
+
+# Visual Studio Code
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+
+# ASP.NET Core
+appsettings.Local.json
+
+# Entity Framework
+*.db
+*.db-shm
+*.db-wal
+
+# Windows
+*.exe
+*.dll
+*.pdb
