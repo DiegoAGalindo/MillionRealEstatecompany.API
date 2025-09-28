@@ -1,17 +1,11 @@
 # Million Real Estate Company API - REST Client Examples
 
-@MillionRealEstatecompany.API_HostAddress = http://localhost:8080
+@MillionRealEstatecompany.API_HostAddress = http://localhost:5285
 @ContentType = application/json
 
 ### ==== DATA SEEDER ====
 
-# Verificar estado de la base de datos
-GET {{MillionRealEstatecompany.API_HostAddress}}/api/dataseeder/status
-Accept: {{ContentType}}
-
-### Cargar datos iniciales
-POST {{MillionRealEstatecompany.API_HostAddress}}/api/dataseeder/seed?force=false
-Accept: {{ContentType}}
+# Nota: El DataSeederController fue removido - los datos se cargan automáticamente al iniciar la aplicación
 
 ### ==== OWNERS (PROPIETARIOS) ====
 
@@ -220,4 +214,61 @@ Content-Type: {{ContentType}}
   "value": 1200000000,
   "tax": 60000000,
   "idProperty": 9
+}
+
+### ==== PRUEBAS DE VALIDACIÓN ====
+
+### PRUEBA 1: Crear propietario sin campos obligatorios (debe fallar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "photo": "https://example.com/photo.jpg"
+}
+
+### PRUEBA 2: Crear propietario con datos válidos (debe funcionar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "name": "Test Owner",
+  "address": "Test Address 123",
+  "birthday": "1990-01-01"
+}
+
+### PRUEBA 3: Crear propiedad sin campos obligatorios (debe fallar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/properties
+Content-Type: {{ContentType}}
+
+{
+  "price": 100000
+}
+
+### PRUEBA 4: Crear propiedad con datos válidos (debe funcionar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/properties
+Content-Type: {{ContentType}}
+
+{
+  "name": "Test Property",
+  "address": "Test Property Address",
+  "price": 150000000,
+  "codeInternal": "TEST001",
+  "year": 2020,
+  "idOwner": 1
+}
+
+### PRUEBA 5: Crear imagen sin campos obligatorios (debe fallar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertyimages
+Content-Type: {{ContentType}}
+
+{
+  "enabled": true
+}
+
+### PRUEBA 6: Crear traza sin campos obligatorios (debe fallar)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/propertytraces
+Content-Type: {{ContentType}}
+
+{
+  "value": 100000
 }

@@ -113,6 +113,11 @@ public class PropertiesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PropertyDto>> CreateProperty(CreatePropertyDto createPropertyDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         try
         {
             var property = await _propertyService.CreatePropertyAsync(createPropertyDto);

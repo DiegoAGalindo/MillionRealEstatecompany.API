@@ -35,9 +35,9 @@ public class Owner
     public string? Photo { get; set; }
 
     /// <summary>
-    /// Fecha de nacimiento del propietario
+    /// Fecha de nacimiento del propietario (solo fecha, sin hora)
     /// </summary>
-    public DateTime Birthday { get; set; }
+    public DateOnly Birthday { get; set; }
 
     /// <summary>
     /// Colección de propiedades que posee este propietario

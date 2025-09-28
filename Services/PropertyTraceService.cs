@@ -33,7 +33,17 @@ public class PropertyTraceService : IPropertyTraceService
 
     public async Task<PropertyTraceDto> CreatePropertyTraceAsync(CreatePropertyTraceDto createTraceDto)
     {
-        var propertyExists = await _unitOfWork.Properties.ExistsAsync(createTraceDto.IdProperty);
+        // Validar que los campos requeridos no sean null
+        if (!createTraceDto.DateSale.HasValue)
+            throw new ArgumentException("La fecha de venta es obligatoria");
+        if (!createTraceDto.Value.HasValue)
+            throw new ArgumentException("El valor de la transacción es obligatorio");
+        if (!createTraceDto.Tax.HasValue)
+            throw new ArgumentException("El impuesto es obligatorio");
+        if (!createTraceDto.IdProperty.HasValue)
+            throw new ArgumentException("El ID de la propiedad es obligatorio");
+
+        var propertyExists = await _unitOfWork.Properties.ExistsAsync(createTraceDto.IdProperty.Value);
         if (!propertyExists)
             throw new ArgumentException("Property not found.");
 

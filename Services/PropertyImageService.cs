@@ -33,7 +33,13 @@ public class PropertyImageService : IPropertyImageService
 
     public async Task<PropertyImageDto> CreatePropertyImageAsync(CreatePropertyImageDto createImageDto)
     {
-        var propertyExists = await _unitOfWork.Properties.ExistsAsync(createImageDto.IdProperty);
+        // Validar que los campos requeridos no sean null
+        if (!createImageDto.IdProperty.HasValue)
+            throw new ArgumentException("El ID de la propiedad es obligatorio");
+        if (!createImageDto.Enabled.HasValue)
+            throw new ArgumentException("El estado habilitado es obligatorio");
+
+        var propertyExists = await _unitOfWork.Properties.ExistsAsync(createImageDto.IdProperty.Value);
         if (!propertyExists)
             throw new ArgumentException("Property not found.");
 

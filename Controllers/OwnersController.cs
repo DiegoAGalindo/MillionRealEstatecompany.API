@@ -61,11 +61,18 @@ public class OwnersController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new owner
+    /// Crear un nuevo propietario
     /// </summary>
+    /// <param name="createOwnerDto">Datos del propietario a crear</param>
+    /// <returns>El propietario creado</returns>
     [HttpPost]
     public async Task<ActionResult<OwnerDto>> CreateOwner(CreateOwnerDto createOwnerDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         try
         {
             var owner = await _ownerService.CreateOwnerAsync(createOwnerDto);

@@ -60,11 +60,18 @@ public class PropertyTracesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new property trace
+    /// Crear un nuevo rastro de transacción de propiedad
     /// </summary>
+    /// <param name="createTraceDto">Datos del rastro a crear</param>
+    /// <returns>El rastro creado</returns>
     [HttpPost]
     public async Task<ActionResult<PropertyTraceDto>> CreateTrace(CreatePropertyTraceDto createTraceDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         try
         {
             var trace = await _propertyTraceService.CreatePropertyTraceAsync(createTraceDto);

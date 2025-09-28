@@ -33,6 +33,11 @@ public class OwnerService : IOwnerService
 
     public async Task<OwnerDto> CreateOwnerAsync(CreateOwnerDto createOwnerDto)
     {
+        if (!createOwnerDto.Birthday.HasValue)
+        {
+            throw new ArgumentException("La fecha de nacimiento es obligatoria");
+        }
+
         var owner = _mapper.Map<Owner>(createOwnerDto);
         await _unitOfWork.Owners.AddAsync(owner);
         await _unitOfWork.SaveChangesAsync();

@@ -60,11 +60,18 @@ public class PropertyImagesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new property image
+    /// Crear una nueva imagen de propiedad
     /// </summary>
+    /// <param name="createImageDto">Datos de la imagen a crear</param>
+    /// <returns>La imagen creada</returns>
     [HttpPost]
     public async Task<ActionResult<PropertyImageDto>> CreateImage(CreatePropertyImageDto createImageDto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         try
         {
             var image = await _propertyImageService.CreatePropertyImageAsync(createImageDto);

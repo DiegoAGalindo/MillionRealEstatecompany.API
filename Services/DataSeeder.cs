@@ -71,21 +71,21 @@ public class DataSeeder : IDataSeeder
     {
         var owners = new List<Owner>
         {
-            new() { Name = "Carlos Alberto Pérez", Address = "Calle 123 #45-67, Bogotá", Photo = "https://example.com/photos/carlos_perez.jpg", Birthday = new DateTime(1975, 3, 15, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "María Elena Rodríguez", Address = "Carrera 85 #120-34, Medellín", Photo = "https://example.com/photos/maria_rodriguez.jpg", Birthday = new DateTime(1982, 7, 22, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Luis Fernando García", Address = "Avenida 68 #25-89, Cali", Photo = "https://example.com/photos/luis_garcia.jpg", Birthday = new DateTime(1968, 11, 8, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Ana Sofía Martínez", Address = "Calle 72 #11-45, Barranquilla", Photo = "https://example.com/photos/ana_martinez.jpg", Birthday = new DateTime(1990, 2, 14, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Roberto Carlos Silva", Address = "Carrera 15 #93-12, Bucaramanga", Photo = "https://example.com/photos/roberto_silva.jpg", Birthday = new DateTime(1978, 9, 30, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Carmen Lucía Herrera", Address = "Calle 80 #45-23, Cartagena", Photo = "https://example.com/photos/carmen_herrera.jpg", Birthday = new DateTime(1985, 5, 18, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Diego Alejandro Morales", Address = "Avenida 19 #104-56, Pereira", Photo = "https://example.com/photos/diego_morales.jpg", Birthday = new DateTime(1972, 12, 3, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Valentina González", Address = "Carrera 50 #67-89, Manizales", Photo = "https://example.com/photos/valentina_gonzalez.jpg", Birthday = new DateTime(1987, 8, 25, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Andrés Felipe Torres", Address = "Calle 26 #78-90, Armenia", Photo = "https://example.com/photos/andres_torres.jpg", Birthday = new DateTime(1980, 4, 11, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Isabella Castro", Address = "Avenida 30 #12-34, Ibagué", Photo = "https://example.com/photos/isabella_castro.jpg", Birthday = new DateTime(1993, 1, 7, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Sebastián Ramírez", Address = "Carrera 40 #85-67, Neiva", Photo = "https://example.com/photos/sebastian_ramirez.jpg", Birthday = new DateTime(1974, 10, 19, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Camila Vargas", Address = "Calle 60 #23-45, Villavicencio", Photo = "https://example.com/photos/camila_vargas.jpg", Birthday = new DateTime(1989, 6, 12, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Fernando Ruiz", Address = "Avenida 45 #67-12, Pasto", Photo = "https://example.com/photos/fernando_ruiz.jpg", Birthday = new DateTime(1971, 3, 28, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Natalia López", Address = "Carrera 25 #90-34, Popayán", Photo = "https://example.com/photos/natalia_lopez.jpg", Birthday = new DateTime(1986, 11, 15, 0, 0, 0, DateTimeKind.Utc) },
-            new() { Name = "Gabriel Mendoza", Address = "Calle 35 #56-78, Tunja", Photo = "https://example.com/photos/gabriel_mendoza.jpg", Birthday = new DateTime(1979, 7, 2, 0, 0, 0, DateTimeKind.Utc) }
+            new() { Name = "Carlos Alberto Pérez", Address = "Calle 123 #45-67, Bogotá", Photo = "https://example.com/photos/carlos_perez.jpg", Birthday = new DateOnly(1975, 3, 15) },
+            new() { Name = "María Elena Rodríguez", Address = "Carrera 85 #120-34, Medellín", Photo = "https://example.com/photos/maria_rodriguez.jpg", Birthday = new DateOnly(1982, 7, 22) },
+            new() { Name = "Luis Fernando García", Address = "Avenida 68 #25-89, Cali", Photo = "https://example.com/photos/luis_garcia.jpg", Birthday = new DateOnly(1968, 11, 8) },
+            new() { Name = "Ana Sofía Martínez", Address = "Calle 72 #11-45, Barranquilla", Photo = "https://example.com/photos/ana_martinez.jpg", Birthday = new DateOnly(1990, 2, 14) },
+            new() { Name = "Roberto Carlos Silva", Address = "Carrera 15 #93-12, Bucaramanga", Photo = "https://example.com/photos/roberto_silva.jpg", Birthday = new DateOnly(1978, 9, 30) },
+            new() { Name = "Carmen Lucía Herrera", Address = "Calle 80 #45-23, Cartagena", Photo = "https://example.com/photos/carmen_herrera.jpg", Birthday = new DateOnly(1985, 5, 18) },
+            new() { Name = "Diego Alejandro Morales", Address = "Avenida 19 #104-56, Pereira", Photo = "https://example.com/photos/diego_morales.jpg", Birthday = new DateOnly(1972, 12, 3) },
+            new() { Name = "Valentina González", Address = "Carrera 50 #67-89, Manizales", Photo = "https://example.com/photos/valentina_gonzalez.jpg", Birthday = new DateOnly(1987, 8, 25) },
+            new() { Name = "Andrés Felipe Torres", Address = "Calle 26 #78-90, Armenia", Photo = "https://example.com/photos/andres_torres.jpg", Birthday = new DateOnly(1980, 4, 11) },
+            new() { Name = "Isabella Castro", Address = "Avenida 30 #12-34, Ibagué", Photo = "https://example.com/photos/isabella_castro.jpg", Birthday = new DateOnly(1993, 1, 7) },
+            new() { Name = "Sebastián Ramírez", Address = "Carrera 40 #85-67, Neiva", Photo = "https://example.com/photos/sebastian_ramirez.jpg", Birthday = new DateOnly(1974, 10, 19) },
+            new() { Name = "Camila Vargas", Address = "Calle 60 #23-45, Villavicencio", Photo = "https://example.com/photos/camila_vargas.jpg", Birthday = new DateOnly(1989, 6, 12) },
+            new() { Name = "Fernando Ruiz", Address = "Avenida 45 #67-12, Pasto", Photo = "https://example.com/photos/fernando_ruiz.jpg", Birthday = new DateOnly(1971, 3, 28) },
+            new() { Name = "Natalia López", Address = "Carrera 25 #90-34, Popayán", Photo = "https://example.com/photos/natalia_lopez.jpg", Birthday = new DateOnly(1986, 11, 15) },
+            new() { Name = "Gabriel Mendoza", Address = "Calle 35 #56-78, Tunja", Photo = "https://example.com/photos/gabriel_mendoza.jpg", Birthday = new DateOnly(1979, 7, 2) }
         };
 
         _context.Owners.AddRange(owners);

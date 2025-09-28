@@ -51,7 +51,15 @@ public class PropertyService : IPropertyService
     /// <exception cref="ArgumentException">Se lanza cuando el propietario no existe o el código interno ya está en uso</exception>
     public async Task<PropertyDto> CreatePropertyAsync(CreatePropertyDto createPropertyDto)
     {
-        var ownerExists = await _unitOfWork.Owners.ExistsAsync(createPropertyDto.IdOwner);
+        // Validar que los campos requeridos no sean null
+        if (!createPropertyDto.Price.HasValue)
+            throw new ArgumentException("El precio es obligatorio");
+        if (!createPropertyDto.Year.HasValue)
+            throw new ArgumentException("El año de construcción es obligatorio");
+        if (!createPropertyDto.IdOwner.HasValue)
+            throw new ArgumentException("El ID del propietario es obligatorio");
+
+        var ownerExists = await _unitOfWork.Owners.ExistsAsync(createPropertyDto.IdOwner.Value);
         if (!ownerExists)
             throw new ArgumentException("Owner not found.");
 
