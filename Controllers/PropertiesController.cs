@@ -35,7 +35,7 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all properties");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -58,7 +58,7 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting property with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -81,7 +81,7 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting property details with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -101,7 +101,7 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting properties for owner {OwnerId}", ownerId);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -125,12 +125,12 @@ public class PropertiesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating property");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -153,12 +153,12 @@ public class PropertiesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating property with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -181,7 +181,7 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting property with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 }

@@ -35,13 +35,15 @@ public class OwnersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting all owners");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// Get owner by ID
+    /// Obtiene un propietario por su identificador
     /// </summary>
+    /// <param name="id">Identificador del propietario</param>
+    /// <returns>Propietario encontrado</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<OwnerDto>> GetOwner(int id)
     {
@@ -56,12 +58,12 @@ public class OwnersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting owner with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
     /// <summary>
-    /// Crear un nuevo propietario
+    /// Crea un nuevo propietario en el sistema
     /// </summary>
     /// <param name="createOwnerDto">Datos del propietario a crear</param>
     /// <returns>El propietario creado</returns>
@@ -91,8 +93,11 @@ public class OwnersController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing owner
+    /// Actualiza un propietario existente en el sistema
     /// </summary>
+    /// <param name="id">Identificador del propietario a actualizar</param>
+    /// <param name="updateOwnerDto">Nuevos datos del propietario</param>
+    /// <returns>El propietario actualizado</returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<OwnerDto>> UpdateOwner(int id, UpdateOwnerDto updateOwnerDto)
     {
@@ -117,8 +122,10 @@ public class OwnersController : ControllerBase
     }
 
     /// <summary>
-    /// Delete an owner
+    /// Elimina un propietario del sistema
     /// </summary>
+    /// <param name="id">Identificador del propietario a eliminar</param>
+    /// <returns>NoContent si se eliminó correctamente</returns>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteOwner(int id)
     {
@@ -132,12 +139,12 @@ public class OwnersController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting owner with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 }
