@@ -4,6 +4,9 @@ using MillionRealEstatecompany.API.Interfaces;
 
 namespace MillionRealEstatecompany.API.Controllers;
 
+/// <summary>
+/// Controller for managing property image operations
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PropertyImagesController : ControllerBase
@@ -46,7 +49,7 @@ public class PropertyImagesController : ControllerBase
             var image = await _propertyImageService.GetImageByIdAsync(id);
             if (image == null)
                 return NotFound();
-            
+
             return Ok(image);
         }
         catch (Exception ex)
@@ -69,7 +72,7 @@ public class PropertyImagesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument creating property image");
+
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
@@ -90,7 +93,7 @@ public class PropertyImagesController : ControllerBase
             var image = await _propertyImageService.UpdatePropertyImageAsync(id, updateImageDto);
             if (image == null)
                 return NotFound();
-            
+
             return Ok(image);
         }
         catch (Exception ex)
@@ -111,7 +114,7 @@ public class PropertyImagesController : ControllerBase
             var result = await _propertyImageService.DeletePropertyImageAsync(id);
             if (!result)
                 return NotFound();
-            
+
             return NoContent();
         }
         catch (Exception ex)

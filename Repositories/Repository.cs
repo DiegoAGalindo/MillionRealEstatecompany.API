@@ -5,6 +5,9 @@ using System.Linq.Expressions;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Generic repository implementation for data access operations
+/// </summary>
 public class Repository<T> : IRepository<T> where T : class
 {
     protected readonly ApplicationDbContext _context;

@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Services;
 
+/// <summary>
+/// Service for managing property trace business logic
+/// </summary>
 public class PropertyTraceService : IPropertyTraceService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -30,7 +33,6 @@ public class PropertyTraceService : IPropertyTraceService
 
     public async Task<PropertyTraceDto> CreatePropertyTraceAsync(CreatePropertyTraceDto createTraceDto)
     {
-        // Validate property exists
         var propertyExists = await _unitOfWork.Properties.ExistsAsync(createTraceDto.IdProperty);
         if (!propertyExists)
             throw new ArgumentException("Property not found.");
@@ -47,7 +49,6 @@ public class PropertyTraceService : IPropertyTraceService
         if (existingTrace == null)
             return null;
 
-        // Validate property exists
         var propertyExists = await _unitOfWork.Properties.ExistsAsync(updateTraceDto.IdProperty);
         if (!propertyExists)
             throw new ArgumentException("Property not found.");

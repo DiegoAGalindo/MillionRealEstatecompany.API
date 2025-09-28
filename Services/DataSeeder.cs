@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MillionRealEstatecompany.API.Services;
 
+/// <summary>
+/// Servicio responsable de insertar datos iniciales de prueba en la base de datos
+/// </summary>
 public class DataSeeder : IDataSeeder
 {
     private readonly ApplicationDbContext _context;
@@ -16,33 +19,39 @@ public class DataSeeder : IDataSeeder
         _logger = logger;
     }
 
+    /// <summary>
+    /// Verifica si la base de datos ya contiene datos de propietarios
+    /// </summary>
+    /// <returns>True si existen propietarios en la base de datos</returns>
     public async Task<bool> HasDataAsync()
     {
         return await _context.Owners.AnyAsync();
     }
 
+    /// <summary>
+    /// Elimina todos los datos existentes de la base de datos en el orden correcto para evitar conflictos de claves foráneas
+    /// </summary>
     public async Task ClearDataAsync()
     {
-        _logger.LogInformation("Clearing existing data...");
-
         _context.PropertyTraces.RemoveRange(_context.PropertyTraces);
         _context.PropertyImages.RemoveRange(_context.PropertyImages);
         _context.Properties.RemoveRange(_context.Properties);
         _context.Owners.RemoveRange(_context.Owners);
 
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Data cleared successfully.");
     }
 
+    /// <summary>
+    /// Inserta datos de prueba en la base de datos incluyendo propietarios, propiedades, imágenes y trazas
+    /// Solo ejecuta si la base de datos está vacía
+    /// </summary>
+    /// <exception cref="Exception">Se propaga cualquier error ocurrido durante la inserción</exception>
     public async Task SeedDataAsync()
     {
         try
         {
-            _logger.LogInformation("Starting data seeding...");
-
             if (await HasDataAsync())
             {
-                _logger.LogInformation("Data already exists, skipping seeding.");
                 return;
             }
 
@@ -50,8 +59,6 @@ public class DataSeeder : IDataSeeder
             await SeedPropertiesAsync();
             await SeedPropertyImagesAsync();
             await SeedPropertyTracesAsync();
-
-            _logger.LogInformation("Data seeding completed successfully.");
         }
         catch (Exception ex)
         {
@@ -83,31 +90,21 @@ public class DataSeeder : IDataSeeder
 
         _context.Owners.AddRange(owners);
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Seeded {owners.Count} owners.");
     }
 
     private async Task SeedPropertiesAsync()
     {
         var properties = new List<Property>
         {
-            // Propiedades de Carlos Alberto Pérez (IdOwner: 1)
             new() { Name = "Apartamento Zona Rosa", Address = "Calle 82 #11-23, Zona Rosa, Bogotá", Price = 450000000.00m, CodeInternal = "BOG-ZR-001", Year = 2019, IdOwner = 1 },
             new() { Name = "Casa Campestre La Calera", Address = "Vereda El Salitre, La Calera", Price = 850000000.00m, CodeInternal = "CAL-CS-002", Year = 2020, IdOwner = 1 },
-            
-            // Propiedades de María Elena Rodríguez (IdOwner: 2)
             new() { Name = "Penthouse El Poblado", Address = "Carrera 43A #5-15, El Poblado, Medellín", Price = 1200000000.00m, CodeInternal = "MED-PH-003", Year = 2021, IdOwner = 2 },
             new() { Name = "Apartamento Laureles", Address = "Calle 70 #80-45, Laureles, Medellín", Price = 380000000.00m, CodeInternal = "MED-LAU-004", Year = 2018, IdOwner = 2 },
             new() { Name = "Oficina Centro Medellín", Address = "Carrera 50 #52-36, Centro, Medellín", Price = 250000000.00m, CodeInternal = "MED-OFC-005", Year = 2017, IdOwner = 2 },
-            
-            // Propiedades de Luis Fernando García (IdOwner: 3)
             new() { Name = "Casa San Antonio", Address = "Calle 1 Oeste #3-25, San Antonio, Cali", Price = 320000000.00m, CodeInternal = "CAL-SA-006", Year = 2016, IdOwner = 3 },
             new() { Name = "Apartamento Ciudad Jardín", Address = "Avenida 6N #23-50, Ciudad Jardín, Cali", Price = 280000000.00m, CodeInternal = "CAL-CJ-007", Year = 2019, IdOwner = 3 },
-            
-            // Propiedades de Ana Sofía Martínez (IdOwner: 4)
             new() { Name = "Casa El Prado", Address = "Calle 76 #68-45, El Prado, Barranquilla", Price = 420000000.00m, CodeInternal = "BAQ-EP-008", Year = 2020, IdOwner = 4 },
             new() { Name = "Apartamento Norte Histórico", Address = "Carrera 46 #84-12, Norte Histórico, Barranquilla", Price = 195000000.00m, CodeInternal = "BAQ-NH-009", Year = 2015, IdOwner = 4 },
-            
-            // Más propiedades...
             new() { Name = "Casa Cabecera", Address = "Carrera 33 #42-18, Cabecera, Bucaramanga", Price = 365000000.00m, CodeInternal = "BGA-CAB-010", Year = 2018, IdOwner = 5 },
             new() { Name = "Casa Centro Histórico", Address = "Calle de la Factoria #36-57, Centro Histórico, Cartagena", Price = 680000000.00m, CodeInternal = "CTG-CH-012", Year = 2019, IdOwner = 6 },
             new() { Name = "Casa Circunvalar", Address = "Avenida Circunvalar #15-78, Pereira", Price = 295000000.00m, CodeInternal = "PER-CIR-014", Year = 2017, IdOwner = 7 },
@@ -118,14 +115,12 @@ public class DataSeeder : IDataSeeder
 
         _context.Properties.AddRange(properties);
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Seeded {properties.Count} properties.");
     }
 
     private async Task SeedPropertyImagesAsync()
     {
         var images = new List<PropertyImage>();
 
-        // Agregar imágenes para cada propiedad
         for (int propertyId = 1; propertyId <= 15; propertyId++)
         {
             images.AddRange(new[]
@@ -138,7 +133,6 @@ public class DataSeeder : IDataSeeder
 
         _context.PropertyImages.AddRange(images);
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Seeded {images.Count} property images.");
     }
 
     private async Task SeedPropertyTracesAsync()
@@ -146,7 +140,6 @@ public class DataSeeder : IDataSeeder
         var traces = new List<PropertyTrace>();
         var random = new Random();
 
-        // Crear trazas para cada propiedad
         for (int propertyId = 1; propertyId <= 15; propertyId++)
         {
             var baseValue = random.Next(100000000, 800000000);
@@ -175,6 +168,5 @@ public class DataSeeder : IDataSeeder
 
         _context.PropertyTraces.AddRange(traces);
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Seeded {traces.Count} property traces.");
     }
 }

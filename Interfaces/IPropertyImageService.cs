@@ -2,6 +2,9 @@ using MillionRealEstatecompany.API.DTOs;
 
 namespace MillionRealEstatecompany.API.Interfaces;
 
+/// <summary>
+/// Interface for property image service operations
+/// </summary>
 public interface IPropertyImageService
 {
     Task<IEnumerable<PropertyImageDto>> GetImagesByPropertyAsync(int propertyId);

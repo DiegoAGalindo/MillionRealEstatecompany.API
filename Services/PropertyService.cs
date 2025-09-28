@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Services;
 
+/// <summary>
+/// Servicio para gestionar la lógica de negocio de las propiedades inmobiliarias
+/// </summary>
 public class PropertyService : IPropertyService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -40,14 +43,18 @@ public class PropertyService : IPropertyService
         return _mapper.Map<IEnumerable<PropertyDto>>(properties);
     }
 
+    /// <summary>
+    /// Crea una nueva propiedad validando que el propietario exista y el código interno sea único
+    /// </summary>
+    /// <param name="createPropertyDto">Datos de la propiedad a crear</param>
+    /// <returns>DTO de la propiedad creada con información del propietario</returns>
+    /// <exception cref="ArgumentException">Se lanza cuando el propietario no existe o el código interno ya está en uso</exception>
     public async Task<PropertyDto> CreatePropertyAsync(CreatePropertyDto createPropertyDto)
     {
-        // Validate owner exists
         var ownerExists = await _unitOfWork.Owners.ExistsAsync(createPropertyDto.IdOwner);
         if (!ownerExists)
             throw new ArgumentException("Owner not found.");
 
-        // Validate unique CodeInternal
         var codeExists = await _unitOfWork.Properties.CodeInternalExistsAsync(createPropertyDto.CodeInternal);
         if (codeExists)
             throw new ArgumentException("CodeInternal already exists.");
@@ -56,23 +63,27 @@ public class PropertyService : IPropertyService
         await _unitOfWork.Properties.AddAsync(property);
         await _unitOfWork.SaveChangesAsync();
 
-        // Return with owner information
         var createdProperty = await _unitOfWork.Properties.GetPropertyWithDetailsAsync(property.IdProperty);
         return _mapper.Map<PropertyDto>(createdProperty);
     }
 
+    /// <summary>
+    /// Actualiza una propiedad existente validando propietario y unicidad del código interno
+    /// </summary>
+    /// <param name="id">Identificador de la propiedad a actualizar</param>
+    /// <param name="updatePropertyDto">Datos actualizados de la propiedad</param>
+    /// <returns>DTO de la propiedad actualizada, null si no existe</returns>
+    /// <exception cref="ArgumentException">Se lanza cuando el propietario no existe o el código interno ya está en uso</exception>
     public async Task<PropertyDto?> UpdatePropertyAsync(int id, UpdatePropertyDto updatePropertyDto)
     {
         var existingProperty = await _unitOfWork.Properties.GetByIdAsync(id);
         if (existingProperty == null)
             return null;
 
-        // Validate owner exists
         var ownerExists = await _unitOfWork.Owners.ExistsAsync(updatePropertyDto.IdOwner);
         if (!ownerExists)
             throw new ArgumentException("Owner not found.");
 
-        // Validate unique CodeInternal
         var codeExists = await _unitOfWork.Properties.CodeInternalExistsAsync(updatePropertyDto.CodeInternal, id);
         if (codeExists)
             throw new ArgumentException("CodeInternal already exists.");
@@ -81,7 +92,6 @@ public class PropertyService : IPropertyService
         await _unitOfWork.Properties.UpdateAsync(existingProperty);
         await _unitOfWork.SaveChangesAsync();
 
-        // Return with owner information
         var updatedProperty = await _unitOfWork.Properties.GetPropertyWithDetailsAsync(id);
         return _mapper.Map<PropertyDto>(updatedProperty);
     }

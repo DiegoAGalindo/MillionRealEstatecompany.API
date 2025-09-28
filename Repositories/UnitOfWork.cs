@@ -4,11 +4,14 @@ using MillionRealEstatecompany.API.Interfaces;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Unit of Work implementation for managing repository transactions
+/// </summary>
 public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;
     private IDbContextTransaction? _transaction;
-    
+
     public UnitOfWork(ApplicationDbContext context)
     {
         _context = context;

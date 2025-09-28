@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Repository for property data access operations
+/// </summary>
 public class PropertyRepository : Repository<Property>, IPropertyRepository
 {
     public PropertyRepository(ApplicationDbContext context) : base(context)
@@ -38,12 +41,12 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
     public async Task<bool> CodeInternalExistsAsync(string codeInternal, int? excludeId = null)
     {
         var query = _dbSet.Where(p => p.CodeInternal == codeInternal);
-        
+
         if (excludeId.HasValue)
         {
             query = query.Where(p => p.IdProperty != excludeId.Value);
         }
-        
+
         return await query.AnyAsync();
     }
 }

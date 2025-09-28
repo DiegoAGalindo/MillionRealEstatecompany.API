@@ -3,6 +3,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Data;
 
+/// <summary>
+/// Contexto de base de datos para la aplicación Million Real Estate
+/// </summary>
 public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
@@ -18,7 +21,6 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Owner configuration
         modelBuilder.Entity<Owner>(entity =>
         {
             entity.HasKey(e => e.IdOwner);
@@ -27,7 +29,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Photo).HasMaxLength(500);
         });
 
-        // Property configuration
         modelBuilder.Entity<Property>(entity =>
         {
             entity.HasKey(e => e.IdProperty);
@@ -35,37 +36,32 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Address).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
             entity.Property(e => e.CodeInternal).IsRequired().HasMaxLength(50);
-            
-            // Foreign key relationship
+
             entity.HasOne(e => e.Owner)
                 .WithMany(o => o.Properties)
                 .HasForeignKey(e => e.IdOwner)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // PropertyImage configuration
         modelBuilder.Entity<PropertyImage>(entity =>
         {
             entity.HasKey(e => e.IdPropertyImage);
             entity.Property(e => e.File).IsRequired().HasMaxLength(500);
             entity.Property(e => e.Enabled).HasDefaultValue(true);
-            
-            // Foreign key relationship
+
             entity.HasOne(e => e.Property)
                 .WithMany(p => p.PropertyImages)
                 .HasForeignKey(e => e.IdProperty)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // PropertyTrace configuration
         modelBuilder.Entity<PropertyTrace>(entity =>
         {
             entity.HasKey(e => e.IdPropertyTrace);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Value).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Tax).HasColumnType("decimal(18,2)");
-            
-            // Foreign key relationship
+
             entity.HasOne(e => e.Property)
                 .WithMany(p => p.PropertyTraces)
                 .HasForeignKey(e => e.IdProperty)

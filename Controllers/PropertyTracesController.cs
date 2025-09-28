@@ -4,6 +4,9 @@ using MillionRealEstatecompany.API.Interfaces;
 
 namespace MillionRealEstatecompany.API.Controllers;
 
+/// <summary>
+/// Controller for managing property trace operations
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PropertyTracesController : ControllerBase
@@ -46,7 +49,7 @@ public class PropertyTracesController : ControllerBase
             var trace = await _propertyTraceService.GetTraceByIdAsync(id);
             if (trace == null)
                 return NotFound();
-            
+
             return Ok(trace);
         }
         catch (Exception ex)
@@ -69,7 +72,7 @@ public class PropertyTracesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument creating property trace");
+
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
@@ -90,12 +93,12 @@ public class PropertyTracesController : ControllerBase
             var trace = await _propertyTraceService.UpdatePropertyTraceAsync(id, updateTraceDto);
             if (trace == null)
                 return NotFound();
-            
+
             return Ok(trace);
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument updating property trace with id {Id}", id);
+
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
@@ -116,7 +119,7 @@ public class PropertyTracesController : ControllerBase
             var result = await _propertyTraceService.DeletePropertyTraceAsync(id);
             if (!result)
                 return NotFound();
-            
+
             return NoContent();
         }
         catch (Exception ex)

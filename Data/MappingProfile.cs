@@ -4,16 +4,17 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Data;
 
+/// <summary>
+/// Perfil de AutoMapper para mapear entre entidades y DTOs
+/// </summary>
 public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Owner mappings
         CreateMap<Owner, OwnerDto>();
         CreateMap<CreateOwnerDto, Owner>();
         CreateMap<UpdateOwnerDto, Owner>();
 
-        // Property mappings
         CreateMap<Property, PropertyDto>()
             .ForMember(dest => dest.OwnerName, opt => opt.MapFrom(src => src.Owner.Name));
         CreateMap<Property, PropertyDetailDto>()
@@ -23,12 +24,10 @@ public class MappingProfile : Profile
         CreateMap<CreatePropertyDto, Property>();
         CreateMap<UpdatePropertyDto, Property>();
 
-        // PropertyImage mappings
         CreateMap<PropertyImage, PropertyImageDto>();
         CreateMap<CreatePropertyImageDto, PropertyImage>();
         CreateMap<UpdatePropertyImageDto, PropertyImage>();
 
-        // PropertyTrace mappings
         CreateMap<PropertyTrace, PropertyTraceDto>();
         CreateMap<CreatePropertyTraceDto, PropertyTrace>();
         CreateMap<UpdatePropertyTraceDto, PropertyTrace>();

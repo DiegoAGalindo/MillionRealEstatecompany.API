@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Repository for property image data access operations
+/// </summary>
 public class PropertyImageRepository : Repository<PropertyImage>, IPropertyImageRepository
 {
     public PropertyImageRepository(ApplicationDbContext context) : base(context)

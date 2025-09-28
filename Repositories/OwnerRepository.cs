@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Repository for owner data access operations
+/// </summary>
 public class OwnerRepository : Repository<Owner>, IOwnerRepository
 {
     public OwnerRepository(ApplicationDbContext context) : base(context)

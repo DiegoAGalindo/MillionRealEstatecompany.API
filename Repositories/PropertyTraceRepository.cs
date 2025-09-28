@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
+/// <summary>
+/// Repository for property trace data access operations
+/// </summary>
 public class PropertyTraceRepository : Repository<PropertyTrace>, IPropertyTraceRepository
 {
     public PropertyTraceRepository(ApplicationDbContext context) : base(context)

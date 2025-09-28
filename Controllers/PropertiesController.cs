@@ -4,6 +4,9 @@ using MillionRealEstatecompany.API.Interfaces;
 
 namespace MillionRealEstatecompany.API.Controllers;
 
+/// <summary>
+/// Controlador para gestionar las operaciones de propiedades inmobiliarias
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class PropertiesController : ControllerBase
@@ -18,8 +21,9 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all properties
+    /// Obtiene todas las propiedades registradas en el sistema
     /// </summary>
+    /// <returns>Lista de todas las propiedades con información del propietario</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PropertyDto>>> GetAllProperties()
     {
@@ -36,8 +40,10 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Get property by ID
+    /// Obtiene una propiedad específica por su identificador
     /// </summary>
+    /// <param name="id">Identificador único de la propiedad</param>
+    /// <returns>Datos de la propiedad solicitada</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<PropertyDto>> GetProperty(int id)
     {
@@ -46,7 +52,7 @@ public class PropertiesController : ControllerBase
             var property = await _propertyService.GetPropertyByIdAsync(id);
             if (property == null)
                 return NotFound();
-            
+
             return Ok(property);
         }
         catch (Exception ex)
@@ -57,8 +63,10 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Get property with all details (images and traces)
+    /// Obtiene una propiedad con todos sus detalles incluyendo imágenes y trazas históricas
     /// </summary>
+    /// <param name="id">Identificador único de la propiedad</param>
+    /// <returns>Datos completos de la propiedad con imágenes y trazas</returns>
     [HttpGet("{id}/details")]
     public async Task<ActionResult<PropertyDetailDto>> GetPropertyWithDetails(int id)
     {
@@ -67,7 +75,7 @@ public class PropertiesController : ControllerBase
             var property = await _propertyService.GetPropertyWithDetailsAsync(id);
             if (property == null)
                 return NotFound();
-            
+
             return Ok(property);
         }
         catch (Exception ex)
@@ -78,8 +86,10 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Get properties by owner ID
+    /// Obtiene todas las propiedades que pertenecen a un propietario específico
     /// </summary>
+    /// <param name="ownerId">Identificador del propietario</param>
+    /// <returns>Lista de propiedades del propietario especificado</returns>
     [HttpGet("by-owner/{ownerId}")]
     public async Task<ActionResult<IEnumerable<PropertyDto>>> GetPropertiesByOwner(int ownerId)
     {
@@ -96,8 +106,10 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new property
+    /// Crea una nueva propiedad en el sistema
     /// </summary>
+    /// <param name="createPropertyDto">Datos de la propiedad a crear</param>
+    /// <returns>Datos de la propiedad creada</returns>
     [HttpPost]
     public async Task<ActionResult<PropertyDto>> CreateProperty(CreatePropertyDto createPropertyDto)
     {
@@ -108,7 +120,6 @@ public class PropertiesController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument creating property");
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
@@ -119,8 +130,11 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing property
+    /// Actualiza una propiedad existente
     /// </summary>
+    /// <param name="id">Identificador de la propiedad a actualizar</param>
+    /// <param name="updatePropertyDto">Datos actualizados de la propiedad</param>
+    /// <returns>Datos de la propiedad actualizada</returns>
     [HttpPut("{id}")]
     public async Task<ActionResult<PropertyDto>> UpdateProperty(int id, UpdatePropertyDto updatePropertyDto)
     {
@@ -129,12 +143,11 @@ public class PropertiesController : ControllerBase
             var property = await _propertyService.UpdatePropertyAsync(id, updatePropertyDto);
             if (property == null)
                 return NotFound();
-            
+
             return Ok(property);
         }
         catch (ArgumentException ex)
         {
-            _logger.LogWarning(ex, "Invalid argument updating property with id {Id}", id);
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
@@ -145,8 +158,10 @@ public class PropertiesController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a property
+    /// Elimina una propiedad del sistema
     /// </summary>
+    /// <param name="id">Identificador de la propiedad a eliminar</param>
+    /// <returns>Resultado de la operación de eliminación</returns>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteProperty(int id)
     {
@@ -155,7 +170,7 @@ public class PropertiesController : ControllerBase
             var result = await _propertyService.DeletePropertyAsync(id);
             if (!result)
                 return NotFound();
-            
+
             return NoContent();
         }
         catch (Exception ex)

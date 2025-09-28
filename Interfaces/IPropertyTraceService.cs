@@ -2,6 +2,9 @@ using MillionRealEstatecompany.API.DTOs;
 
 namespace MillionRealEstatecompany.API.Interfaces;
 
+/// <summary>
+/// Interface for property trace service operations
+/// </summary>
 public interface IPropertyTraceService
 {
     Task<IEnumerable<PropertyTraceDto>> GetTracesByPropertyAsync(int propertyId);

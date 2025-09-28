@@ -4,6 +4,9 @@ using MillionRealEstatecompany.API.Interfaces;
 
 namespace MillionRealEstatecompany.API.Controllers;
 
+/// <summary>
+/// Controlador para gestionar las operaciones de propietarios
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class OwnersController : ControllerBase
@@ -18,8 +21,9 @@ public class OwnersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all owners
+    /// Obtiene todos los propietarios registrados en el sistema
     /// </summary>
+    /// <returns>Lista de todos los propietarios</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<OwnerDto>>> GetAllOwners()
     {
@@ -46,7 +50,7 @@ public class OwnersController : ControllerBase
             var owner = await _ownerService.GetOwnerByIdAsync(id);
             if (owner == null)
                 return NotFound();
-            
+
             return Ok(owner);
         }
         catch (Exception ex)
@@ -85,7 +89,7 @@ public class OwnersController : ControllerBase
             var owner = await _ownerService.UpdateOwnerAsync(id, updateOwnerDto);
             if (owner == null)
                 return NotFound();
-            
+
             return Ok(owner);
         }
         catch (Exception ex)
@@ -106,12 +110,11 @@ public class OwnersController : ControllerBase
             var result = await _ownerService.DeleteOwnerAsync(id);
             if (!result)
                 return NotFound();
-            
+
             return NoContent();
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Cannot delete owner with id {Id}", id);
             return BadRequest(ex.Message);
         }
         catch (Exception ex)

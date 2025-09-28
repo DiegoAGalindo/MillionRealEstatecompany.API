@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Services;
 
+/// <summary>
+/// Service for managing property image business logic
+/// </summary>
 public class PropertyImageService : IPropertyImageService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -30,7 +33,6 @@ public class PropertyImageService : IPropertyImageService
 
     public async Task<PropertyImageDto> CreatePropertyImageAsync(CreatePropertyImageDto createImageDto)
     {
-        // Validate property exists
         var propertyExists = await _unitOfWork.Properties.ExistsAsync(createImageDto.IdProperty);
         if (!propertyExists)
             throw new ArgumentException("Property not found.");

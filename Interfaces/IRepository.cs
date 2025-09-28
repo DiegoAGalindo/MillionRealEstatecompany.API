@@ -2,6 +2,9 @@ using System.Linq.Expressions;
 
 namespace MillionRealEstatecompany.API.Interfaces;
 
+/// <summary>
+/// Generic repository interface for data access operations
+/// </summary>
 public interface IRepository<T> where T : class
 {
     Task<T?> GetByIdAsync(int id);

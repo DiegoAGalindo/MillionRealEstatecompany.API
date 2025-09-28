@@ -2,6 +2,9 @@ using MillionRealEstatecompany.API.DTOs;
 
 namespace MillionRealEstatecompany.API.Interfaces;
 
+/// <summary>
+/// Interfaz para las operaciones del servicio de propiedades inmobiliarias
+/// </summary>
 public interface IPropertyService
 {
     Task<IEnumerable<PropertyDto>> GetAllPropertiesAsync();

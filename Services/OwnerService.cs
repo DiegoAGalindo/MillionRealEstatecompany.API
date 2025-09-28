@@ -5,6 +5,9 @@ using MillionRealEstatecompany.API.Models;
 
 namespace MillionRealEstatecompany.API.Services;
 
+/// <summary>
+/// Servicio para gestionar la lógica de negocio de los propietarios
+/// </summary>
 public class OwnerService : IOwnerService
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -48,13 +51,18 @@ public class OwnerService : IOwnerService
         return _mapper.Map<OwnerDto>(existingOwner);
     }
 
+    /// <summary>
+    /// Elimina un propietario del sistema validando que no tenga propiedades asociadas
+    /// </summary>
+    /// <param name="id">Identificador del propietario a eliminar</param>
+    /// <returns>True si se eliminó exitosamente, False si no existe</returns>
+    /// <exception cref="InvalidOperationException">Se lanza cuando el propietario tiene propiedades asociadas</exception>
     public async Task<bool> DeleteOwnerAsync(int id)
     {
         var owner = await _unitOfWork.Owners.GetByIdAsync(id);
         if (owner == null)
             return false;
 
-        // Check if owner has properties
         var hasProperties = await _unitOfWork.Owners.HasPropertiesAsync(id);
         if (hasProperties)
             throw new InvalidOperationException("Cannot delete owner with associated properties.");
