@@ -46,6 +46,21 @@ public class OwnerService : IOwnerService
     }
 
     /// <summary>
+    /// Obtiene un propietario específico por su número de documento de identificación
+    /// </summary>
+    /// <param name="documentNumber">Número de documento de identificación del propietario</param>
+    /// <returns>Propietario encontrado o null si no existe</returns>
+    /// <exception cref="ArgumentException">Se lanza cuando el número de documento es nulo o vacío</exception>
+    public async Task<OwnerDto?> GetOwnerByDocumentNumberAsync(string documentNumber)
+    {
+        if (string.IsNullOrWhiteSpace(documentNumber))
+            throw new ArgumentException("Document number is required");
+
+        var owner = await _unitOfWork.Owners.GetByDocumentNumberAsync(documentNumber);
+        return owner == null ? null : _mapper.Map<OwnerDto>(owner);
+    }
+
+    /// <summary>
     /// Crea un nuevo propietario en el sistema
     /// </summary>
     /// <param name="createOwnerDto">Datos del propietario a crear</param>

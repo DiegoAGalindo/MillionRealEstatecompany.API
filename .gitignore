@@ -45,6 +45,9 @@ _ReSharper/
 # ASP.NET Core
 appsettings.Local.json
 
+# HTTP test files (development convenience)
+*.http
+
 # Entity Framework
 *.db
 *.db-shm

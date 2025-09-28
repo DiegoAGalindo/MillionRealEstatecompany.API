@@ -63,6 +63,34 @@ public class OwnersController : ControllerBase
     }
 
     /// <summary>
+    /// Obtiene un propietario por su número de documento de identificación
+    /// </summary>
+    /// <param name="documentNumber">Número de documento de identificación del propietario</param>
+    /// <returns>Propietario encontrado</returns>
+    [HttpGet("by-document/{documentNumber}")]
+    public async Task<ActionResult<OwnerDto>> GetOwnerByDocumentNumber(string documentNumber)
+    {
+        try
+        {
+            var owner = await _ownerService.GetOwnerByDocumentNumberAsync(documentNumber);
+            if (owner == null)
+                return NotFound(new { message = "Owner not found" });
+
+            return Ok(owner);
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid document number: {DocumentNumber}", documentNumber);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting owner with document number {DocumentNumber}", documentNumber);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
     /// Crea un nuevo propietario en el sistema
     /// </summary>
     /// <param name="createOwnerDto">Datos del propietario a crear</param>
