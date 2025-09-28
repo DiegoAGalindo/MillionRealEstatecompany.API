@@ -151,7 +151,7 @@ docker-compose up --build -d
 
 1. 🐳 Construye contenedor de la API
 2. 🗄️ Inicia PostgreSQL con credenciales del .env
-3. 📊 Aplica migraciones (crea tablas)
+3. 📊 Aplica migración inicial unificada (crea todas las tablas e índices)
 4. 🌱 Carga 75 registros de datos de prueba
 5. 🚀 API lista en http://localhost:8080
 

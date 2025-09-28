@@ -21,7 +21,9 @@ namespace MillionRealEstatecompany.API.Migrations
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Address = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Photo = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
-                    Birthday = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Birthday = table.Column<DateOnly>(type: "date", nullable: false),
+                    DocumentNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -95,6 +97,17 @@ namespace MillionRealEstatecompany.API.Migrations
                         principalColumn: "IdProperty",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Owners_DocumentNumber",
+                table: "Owners",
+                column: "DocumentNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Owners_Email",
+                table: "Owners",
+                column: "Email");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Properties_IdOwner",

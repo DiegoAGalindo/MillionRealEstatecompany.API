@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MillionRealEstatecompany.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250928214542_AddDocumentNumberAndEmailToOwners")]
-    partial class AddDocumentNumberAndEmailToOwners
+    [Migration("20250928223151_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -64,6 +64,8 @@ namespace MillionRealEstatecompany.API.Migrations
 
                     b.HasIndex("DocumentNumber")
                         .IsUnique();
+
+                    b.HasIndex("Email");
 
                     b.ToTable("Owners");
                 });
