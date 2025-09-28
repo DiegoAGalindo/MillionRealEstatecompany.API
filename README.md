@@ -2,11 +2,89 @@
 
 ## 📋 Descripción
 
-API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET Core 8.0. Implementa un sistema completo de CRUD para propiedades, propietarios, imágenes y trazabilidad de precios, siguiendo principios SOLID y patrones de diseño modernos.
+API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET Core 8.0. Implementa un sistema completo de CRUD para propiedades, propietarios, imágenes y trazabilidad de precios, siguiendo principios SOLID y pa```
+
+## 🐳 Docker & Configuración Avanzada
+
+### Variables de Entorno
+
+Este proyecto utiliza archivos `.env` para manejar configuraciones sensibles:
+
+**Archivos de configuración:**
+
+- `.env` - Variables reales (NO se commitea)
+- `.env.example` - Plantilla con ejemplos (SÍ se commitea)
+
+### Configuración para Diferentes Ambientes
+
+```bash
+# Desarrollo (usar credenciales por defecto)
+cp .env.example .env
+
+# Producción (cambiar credenciales)
+cp .env.example .env.prod
+# Editar .env.prod con credenciales seguras
+
+# Usar archivo específico
+docker-compose --env-file .env.prod up
+```
+
+### Comandos Docker Útiles
+
+```bash
+# Construir y ejecutar
+docker-compose up --build
+docker-compose up -d --build  # En segundo plano
+
+# Gestión de contenedores
+docker-compose ps              # Estado de contenedores
+docker-compose logs -f         # Ver logs en tiempo real
+docker-compose logs api        # Logs solo de la API
+docker-compose logs db         # Logs solo de la base de datos
+
+# Parar y limpiar
+docker-compose down            # Parar contenedores
+docker-compose down -v         # Parar y eliminar volúmenes (⚠️ elimina datos)
+
+# Reiniciar desde cero
+docker-compose down -v
+docker system prune -f
+docker-compose up --build
+```
+
+### Verificación de Configuración
+
+```bash
+# Ver configuración con variables resueltas
+docker-compose config
+
+# Verificar que variables se cargan correctamente
+docker-compose config --services
+```
+
+### Seguridad
+
+- ✅ **`.env`** está en `.gitignore` (no se commitea)
+- ✅ **Credenciales** separadas del código fuente
+- ✅ **Variables** organizadas y documentadas
+- ✅ **Diferentes configuraciones** por ambiente
+- ✅ **Plantilla documentada** en `.env.example`
+
+### Acceso a Servicios
+
+- 🌐 **API Base**: http://localhost:8080/api
+- 📚 **Swagger UI**: http://localhost:8080/swagger
+- 🗄️ **PostgreSQL**: localhost:5432
+  - Usuario: `postgres` (o el configurado en `.env`)
+  - Password: `postgres` (o el configurado en `.env`)
+  - Base de datos: `milliondb`
+
+## 🐛 Troubleshootingnes de diseño modernos.
 
 ## 🏗️ Arquitectura
 
 ### Patrones Implementados
+
 - **Repository Pattern**: Abstracción de la capa de datos
 - **Unit of Work**: Gestión de transacciones
 - **Service Layer**: Lógica de negocio
@@ -14,6 +92,7 @@ API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET 
 - **DTO Pattern**: Separación entre modelos de dominio y API
 
 ### Tecnologías
+
 - ASP.NET Core 8.0
 - Entity Framework Core con Npgsql
 - AutoMapper para mapeo de DTOs
@@ -24,9 +103,9 @@ API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET 
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
+
 - **Docker Desktop** (instalado y ejecutándose)
 - **Git** (para clonar el repositorio)
-- **PowerShell** (para scripts opcionales)
 
 ### 1. Descargar el Proyecto
 
@@ -39,7 +118,29 @@ cd MillionRealEstatecompany.API
 # Navegar a la carpeta extraída
 ```
 
-### 2. Ejecutar con Docker (¡TODO AUTOMÁTICO!)
+### 2. Configurar Variables de Entorno
+
+**⚠️ IMPORTANTE**: Este proyecto usa variables de entorno para credenciales seguras.
+
+```bash
+# Copiar plantilla de configuración
+cp .env.example .env
+
+# Editar .env con tus credenciales (opcional para desarrollo)
+# Por defecto funciona con: postgres/postgres/milliondb
+```
+
+**📁 Archivo `.env` (ya configurado para desarrollo):**
+
+```env
+POSTGRES_DB=milliondb
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+ASPNETCORE_ENVIRONMENT=Docker
+ASPNETCORE_URLS=http://+:80
+```
+
+### 3. Ejecutar con Docker (¡TODO AUTOMÁTICO!)
 
 ```bash
 # UN SOLO COMANDO - ¡Hace todo automáticamente!
@@ -47,13 +148,14 @@ docker-compose up --build -d
 ```
 
 **⚡ Qué sucede automáticamente:**
-1. 🐳 Construye contenedor de la API 
-2. 🗄️ Inicia PostgreSQL
+
+1. 🐳 Construye contenedor de la API
+2. 🗄️ Inicia PostgreSQL con credenciales del .env
 3. 📊 Aplica migraciones (crea tablas)
 4. 🌱 Carga 75 registros de datos de prueba
 5. 🚀 API lista en http://localhost:8080
 
-### 3. Verificar que Todo Funciona
+### 4. Verificar que Todo Funciona
 
 ```bash
 # Ver estado de contenedores
@@ -63,7 +165,7 @@ docker-compose ps
 Invoke-RestMethod -Uri "http://localhost:8080/api/dataseeder/status"
 ```
 
-### 4. Acceder a la API
+### 5. Acceder a la API
 
 - 🌐 **API Base**: http://localhost:8080/api
 - 📚 **Swagger UI**: http://localhost:8080/swagger
@@ -72,6 +174,7 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/dataseeder/status"
 ## 📡 Endpoints Principales
 
 ### Propietarios (Owners)
+
 ```
 GET    /api/owners           # Listar todos los propietarios
 GET    /api/owners/{id}      # Obtener propietario por ID
@@ -81,6 +184,7 @@ DELETE /api/owners/{id}      # Eliminar propietario
 ```
 
 ### Propiedades (Properties)
+
 ```
 GET    /api/properties       # Listar todas las propiedades
 GET    /api/properties/{id}  # Obtener propiedad por ID
@@ -90,6 +194,7 @@ DELETE /api/properties/{id}  # Eliminar propiedad
 ```
 
 ### Imágenes de Propiedades
+
 ```
 GET    /api/propertyimages                    # Listar todas las imágenes
 GET    /api/propertyimages/{id}               # Obtener imagen por ID
@@ -100,6 +205,7 @@ DELETE /api/propertyimages/{id}               # Eliminar imagen
 ```
 
 ### Trazabilidad de Precios
+
 ```
 GET    /api/propertytraces                    # Listar todas las trazas
 GET    /api/propertytraces/{id}               # Obtener traza por ID
@@ -110,6 +216,7 @@ DELETE /api/propertytraces/{id}               # Eliminar traza
 ```
 
 ### Gestión de Datos
+
 ```
 GET    /api/dataseeder/status  # Verificar estado de la BD
 POST   /api/dataseeder/seed    # Cargar datos iniciales
@@ -126,7 +233,7 @@ POST   /api/dataseeder/seed    # Cargar datos iniciales
 ├── Repositories/         # Implementación de repositorios
 ├── Services/            # Lógica de negocio
 ├── Migrations/          # Migraciones de EF Core
-├── scripts/             # Scripts SQL y PowerShell
+├── .env                 # Variables de entorno (no se commitea)
 ├── Properties/          # Configuración de launch settings
 ├── appsettings*.json    # Configuración por ambiente
 ├── Dockerfile           # Configuración de contenedor
@@ -212,14 +319,16 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
 ```
 
 **Beneficios:**
+
 - ✅ **Zero Configuration**: Un comando y todo funciona
-- ✅ **Consistencia**: Mismo setup para todo el equipo  
+- ✅ **Consistencia**: Mismo setup para todo el equipo
 - ✅ **Desarrollo Rápido**: Datos listos inmediatamente
 - ✅ **Sin Errores**: No hay que recordar pasos manuales
 
 ## 📊 Datos de Ejemplo (Carga Automática)
 
 La base de datos se **puebla automáticamente** con datos realistas:
+
 - ✅ **15 Propietarios** con información completa
 - ✅ **15 Propiedades** de diferentes ciudades colombianas
 - ✅ **30 Imágenes** distribuidas entre las propiedades
@@ -229,16 +338,26 @@ La base de datos se **puebla automáticamente** con datos realistas:
 
 ## �️ Comandos Útiles
 
-### Scripts de Automatización
-```powershell
-# Inicio rápido (limpia y reconstruye todo)
-.\scripts\start-dev.ps1
+### Comandos Rápidos de Desarrollo
 
-# Reset completo (limpia volúmenes y contenedores)
-.\scripts\reset-dev.ps1
+```bash
+# ⚡ INICIO RÁPIDO - Un solo comando
+docker-compose up --build -d
+
+# 🔄 RESET COMPLETO - Limpia todo y reinicia
+docker-compose down -v && docker-compose up --build -d
+
+# 📊 ESTADO - Ver qué está corriendo
+docker-compose ps
+
+# 📋 LOGS - Ver qué está pasando
+docker-compose logs -f
 ```
 
+> **💡 Nota**: Este proyecto usa comandos Docker estándar (sin scripts personalizados) para mayor simplicidad y compatibilidad multiplataforma.
+
 ### Comandos Docker Manuales
+
 ```bash
 # Ver logs en tiempo real
 docker-compose logs -f api
@@ -255,6 +374,7 @@ docker-compose ps
 ```
 
 ### Verificación de Datos
+
 ```powershell
 # Verificar que datos estén cargados
 Invoke-RestMethod -Uri "http://localhost:8080/api/dataseeder/status"
@@ -264,29 +384,86 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/dataseeder/status"
 (Invoke-RestMethod -Uri "http://localhost:8080/api/properties").Count
 ```
 
-## �🐛 Troubleshooting
+## 🐛 Troubleshooting
+
+### Problema: Archivo .env no encontrado
+
+```bash
+# Error: docker-compose no encuentra variables
+# Solución: Crear archivo .env
+cp .env.example .env
+```
+
+### Problema: Variables de entorno no se cargan
+
+```bash
+# Verificar configuración
+docker-compose config
+
+# Si las variables aparecen vacías, verificar:
+ls -la .env                    # ¿Existe el archivo?
+cat .env                       # ¿Tiene contenido?
+```
 
 ### Problema: Puerto 8080 en uso
+
 ```bash
 # Cambiar puerto en docker-compose.yml
 ports:
-  - "8081:8080"  # Usar puerto 8081 localmente
+  - "8081:80"  # Usar puerto 8081 localmente
 ```
 
 ### Problema: Error de conexión a base de datos
+
 ```bash
-# Verificar estado de contenedores
+# 1. Verificar estado de contenedores
 docker-compose ps
 
-# Revisar logs
+# 2. Revisar logs
 docker-compose logs api
 docker-compose logs db
+
+# 3. Verificar variables de conexión
+docker-compose config | grep -A5 -B5 ConnectionStrings
+
+# 4. Reiniciar servicios
+docker-compose restart db
+docker-compose restart api
+```
+
+### Problema: Credenciales de base de datos incorrectas
+
+```bash
+# Error: "password authentication failed"
+# Solución: Verificar variables en .env
+cat .env | grep POSTGRES
+
+# Si cambiaste credenciales, recrear volumen
+docker-compose down -v
+docker-compose up --build
 ```
 
 ### Problema: Migraciones pendientes
+
 ```bash
 # Dentro del contenedor API
 docker-compose exec api dotnet ef database update
+
+# O reiniciar completamente
+docker-compose down -v
+docker-compose up --build
+```
+
+### Problema: Contenedores no inician
+
+```bash
+# Limpiar Docker completamente
+docker-compose down -v
+docker system prune -f
+docker-compose up --build
+
+# Ver logs detallados
+docker-compose up --build (sin -d para ver logs)
 ```
 
 ## 📝 Contribución
@@ -303,7 +480,7 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE.md](LICENSE.m
 
 ## 👥 Autores
 
-- **Equipo Million Real Estate** - *Desarrollo inicial*
+- **Equipo Million Real Estate** - _Desarrollo inicial_
 
 ## 🙏 Agradecimientos
 

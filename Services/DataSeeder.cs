@@ -71,21 +71,21 @@ public class DataSeeder : IDataSeeder
     {
         var owners = new List<Owner>
         {
-            new() { Name = "Carlos Alberto Pérez", Address = "Calle 123 #45-67, Bogotá", Photo = "https://example.com/photos/carlos_perez.jpg", Birthday = new DateOnly(1975, 3, 15) },
-            new() { Name = "María Elena Rodríguez", Address = "Carrera 85 #120-34, Medellín", Photo = "https://example.com/photos/maria_rodriguez.jpg", Birthday = new DateOnly(1982, 7, 22) },
-            new() { Name = "Luis Fernando García", Address = "Avenida 68 #25-89, Cali", Photo = "https://example.com/photos/luis_garcia.jpg", Birthday = new DateOnly(1968, 11, 8) },
-            new() { Name = "Ana Sofía Martínez", Address = "Calle 72 #11-45, Barranquilla", Photo = "https://example.com/photos/ana_martinez.jpg", Birthday = new DateOnly(1990, 2, 14) },
-            new() { Name = "Roberto Carlos Silva", Address = "Carrera 15 #93-12, Bucaramanga", Photo = "https://example.com/photos/roberto_silva.jpg", Birthday = new DateOnly(1978, 9, 30) },
-            new() { Name = "Carmen Lucía Herrera", Address = "Calle 80 #45-23, Cartagena", Photo = "https://example.com/photos/carmen_herrera.jpg", Birthday = new DateOnly(1985, 5, 18) },
-            new() { Name = "Diego Alejandro Morales", Address = "Avenida 19 #104-56, Pereira", Photo = "https://example.com/photos/diego_morales.jpg", Birthday = new DateOnly(1972, 12, 3) },
-            new() { Name = "Valentina González", Address = "Carrera 50 #67-89, Manizales", Photo = "https://example.com/photos/valentina_gonzalez.jpg", Birthday = new DateOnly(1987, 8, 25) },
-            new() { Name = "Andrés Felipe Torres", Address = "Calle 26 #78-90, Armenia", Photo = "https://example.com/photos/andres_torres.jpg", Birthday = new DateOnly(1980, 4, 11) },
-            new() { Name = "Isabella Castro", Address = "Avenida 30 #12-34, Ibagué", Photo = "https://example.com/photos/isabella_castro.jpg", Birthday = new DateOnly(1993, 1, 7) },
-            new() { Name = "Sebastián Ramírez", Address = "Carrera 40 #85-67, Neiva", Photo = "https://example.com/photos/sebastian_ramirez.jpg", Birthday = new DateOnly(1974, 10, 19) },
-            new() { Name = "Camila Vargas", Address = "Calle 60 #23-45, Villavicencio", Photo = "https://example.com/photos/camila_vargas.jpg", Birthday = new DateOnly(1989, 6, 12) },
-            new() { Name = "Fernando Ruiz", Address = "Avenida 45 #67-12, Pasto", Photo = "https://example.com/photos/fernando_ruiz.jpg", Birthday = new DateOnly(1971, 3, 28) },
-            new() { Name = "Natalia López", Address = "Carrera 25 #90-34, Popayán", Photo = "https://example.com/photos/natalia_lopez.jpg", Birthday = new DateOnly(1986, 11, 15) },
-            new() { Name = "Gabriel Mendoza", Address = "Calle 35 #56-78, Tunja", Photo = "https://example.com/photos/gabriel_mendoza.jpg", Birthday = new DateOnly(1979, 7, 2) }
+            new() { Name = "Carlos Alberto Pérez", Address = "Calle 123 #45-67, Bogotá", Photo = "https://example.com/photos/carlos_perez.jpg", Birthday = new DateOnly(1975, 3, 15), DocumentNumber = "12345678", Email = "carlos.perez@example.com" },
+            new() { Name = "María Elena Rodríguez", Address = "Carrera 85 #120-34, Medellín", Photo = "https://example.com/photos/maria_rodriguez.jpg", Birthday = new DateOnly(1982, 7, 22), DocumentNumber = "23456789", Email = "maria.rodriguez@example.com" },
+            new() { Name = "Luis Fernando García", Address = "Avenida 68 #25-89, Cali", Photo = "https://example.com/photos/luis_garcia.jpg", Birthday = new DateOnly(1968, 11, 8), DocumentNumber = "34567890", Email = "luis.garcia@example.com" },
+            new() { Name = "Ana Sofía Martínez", Address = "Calle 72 #11-45, Barranquilla", Photo = "https://example.com/photos/ana_martinez.jpg", Birthday = new DateOnly(1990, 2, 14), DocumentNumber = "45678901", Email = "ana.martinez@example.com" },
+            new() { Name = "Roberto Carlos Silva", Address = "Carrera 15 #93-12, Bucaramanga", Photo = "https://example.com/photos/roberto_silva.jpg", Birthday = new DateOnly(1978, 9, 30), DocumentNumber = "56789012", Email = "roberto.silva@example.com" },
+            new() { Name = "Carmen Lucía Herrera", Address = "Calle 80 #45-23, Cartagena", Photo = "https://example.com/photos/carmen_herrera.jpg", Birthday = new DateOnly(1985, 5, 18), DocumentNumber = "67890123", Email = "carmen.herrera@example.com" },
+            new() { Name = "Diego Alejandro Morales", Address = "Avenida 19 #104-56, Pereira", Photo = "https://example.com/photos/diego_morales.jpg", Birthday = new DateOnly(1972, 12, 3), DocumentNumber = "78901234", Email = "diego.morales@example.com" },
+            new() { Name = "Valentina González", Address = "Carrera 50 #67-89, Manizales", Photo = "https://example.com/photos/valentina_gonzalez.jpg", Birthday = new DateOnly(1987, 8, 25), DocumentNumber = "89012345", Email = "valentina.gonzalez@example.com" },
+            new() { Name = "Andrés Felipe Torres", Address = "Calle 26 #78-90, Armenia", Photo = "https://example.com/photos/andres_torres.jpg", Birthday = new DateOnly(1980, 4, 11), DocumentNumber = "90123456", Email = "andres.torres@example.com" },
+            new() { Name = "Isabella Castro", Address = "Avenida 30 #12-34, Ibagué", Photo = "https://example.com/photos/isabella_castro.jpg", Birthday = new DateOnly(1993, 1, 7), DocumentNumber = "01234567", Email = "isabella.castro@example.com" },
+            new() { Name = "Sebastián Ramírez", Address = "Carrera 40 #85-67, Neiva", Photo = "https://example.com/photos/sebastian_ramirez.jpg", Birthday = new DateOnly(1974, 10, 19), DocumentNumber = "10987654", Email = "sebastian.ramirez@example.com" },
+            new() { Name = "Camila Vargas", Address = "Calle 60 #23-45, Villavicencio", Photo = "https://example.com/photos/camila_vargas.jpg", Birthday = new DateOnly(1989, 6, 12), DocumentNumber = "21098765", Email = "camila.vargas@example.com" },
+            new() { Name = "Fernando Ruiz", Address = "Avenida 45 #67-12, Pasto", Photo = "https://example.com/photos/fernando_ruiz.jpg", Birthday = new DateOnly(1971, 3, 28), DocumentNumber = "32109876", Email = "fernando.ruiz@example.com" },
+            new() { Name = "Natalia López", Address = "Carrera 25 #90-34, Popayán", Photo = "https://example.com/photos/natalia_lopez.jpg", Birthday = new DateOnly(1986, 11, 15), DocumentNumber = "43210987", Email = "natalia.lopez@example.com" },
+            new() { Name = "Gabriel Mendoza", Address = "Calle 35 #56-78, Tunja", Photo = "https://example.com/photos/gabriel_mendoza.jpg", Birthday = new DateOnly(1979, 7, 2), DocumentNumber = "54321098", Email = "gabriel.mendoza@example.com" }
         };
 
         _context.Owners.AddRange(owners);

@@ -25,6 +25,12 @@ Thumbs.db
 # Test results
 TestResults/
 
+# Environment variables (sensitive data)
+.env
+
+# Docker volumes
+postgres_data/
+
 # Rider
 .idea/
 

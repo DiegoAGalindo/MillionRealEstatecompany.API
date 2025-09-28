@@ -33,4 +33,22 @@ public class OwnerRepository : Repository<Owner>, IOwnerRepository
         return await _context.Properties
             .AnyAsync(p => p.IdOwner == ownerId);
     }
+
+    public async Task<bool> DocumentNumberExistsAsync(string documentNumber)
+    {
+        return await _context.Owners
+            .AnyAsync(o => o.DocumentNumber == documentNumber);
+    }
+
+    public async Task<Owner?> GetByEmailAsync(string email)
+    {
+        return await _context.Owners
+            .FirstOrDefaultAsync(o => o.Email == email);
+    }
+
+    public async Task<Owner?> GetByDocumentNumberAsync(string documentNumber)
+    {
+        return await _context.Owners
+            .FirstOrDefaultAsync(o => o.DocumentNumber == documentNumber);
+    }
 }

@@ -25,7 +25,34 @@ Content-Type: {{ContentType}}
   "name": "Juan Carlos Rodríguez",
   "address": "Carrera 15 #85-40, Chapinero, Bogotá",
   "photo": "https://example.com/photos/juan-carlos.jpg",
-  "birthday": "1985-03-15T00:00:00Z"
+  "birthday": "1985-03-15",
+  "documentNumber": "12345678",
+  "email": "juan.carlos@email.com"
+}
+
+### Probar error de documento duplicado (debería retornar 400 Bad Request)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "name": "María Fernanda López",
+  "address": "Calle 100 #15-20, Zona Rosa, Bogotá",
+  "photo": "https://example.com/photos/maria-fernanda.jpg",
+  "birthday": "1990-07-22",
+  "documentNumber": "12345678",
+  "email": "maria.lopez@email.com"
+}
+
+### Probar validación con campos vacíos (debería retornar 400 Bad Request)
+POST {{MillionRealEstatecompany.API_HostAddress}}/api/owners
+Content-Type: {{ContentType}}
+
+{
+  "name": "",
+  "address": "",
+  "birthday": null,
+  "documentNumber": "",
+  "email": ""
 }
 
 ### Actualizar propietario

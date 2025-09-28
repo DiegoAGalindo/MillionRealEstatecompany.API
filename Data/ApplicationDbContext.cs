@@ -28,6 +28,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Address).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Photo).HasMaxLength(500);
             entity.Property(e => e.Birthday).HasColumnType("date");
+            entity.Property(e => e.DocumentNumber).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+
+            // Configurar índices para optimizar consultas frecuentes
+            entity.HasIndex(e => e.DocumentNumber).IsUnique(); // Solo DocumentNumber es único
+            entity.HasIndex(e => e.Email); // Email indexado para búsquedas rápidas, pero no único
         });
 
         modelBuilder.Entity<Property>(entity =>

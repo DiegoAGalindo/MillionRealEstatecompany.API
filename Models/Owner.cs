@@ -40,6 +40,21 @@ public class Owner
     public DateOnly Birthday { get; set; }
 
     /// <summary>
+    /// Número de documento de identificación del propietario (único)
+    /// </summary>
+    [Required]
+    [MaxLength(20)]
+    public string DocumentNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Correo electrónico del propietario
+    /// </summary>
+    [Required]
+    [MaxLength(100)]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>
     /// Colección de propiedades que posee este propietario
     /// </summary>
     public virtual ICollection<Property> Properties { get; set; } = new List<Property>();

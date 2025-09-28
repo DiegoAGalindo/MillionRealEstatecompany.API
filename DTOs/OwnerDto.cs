@@ -12,6 +12,8 @@ public class OwnerDto
     public string Address { get; set; } = string.Empty;
     public string? Photo { get; set; }
     public DateOnly Birthday { get; set; }
+    public string DocumentNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -41,6 +43,21 @@ public class CreateOwnerDto
     /// </summary>
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
     public DateOnly? Birthday { get; set; }
+
+    /// <summary>
+    /// Número de documento de identificación del propietario
+    /// </summary>
+    [Required(ErrorMessage = "El número de documento es obligatorio")]
+    [StringLength(20, MinimumLength = 5, ErrorMessage = "El número de documento debe tener entre 5 y 20 caracteres")]
+    public string DocumentNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Correo electrónico del propietario
+    /// </summary>
+    [Required(ErrorMessage = "El correo electrónico es obligatorio")]
+    [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido")]
+    [StringLength(100, ErrorMessage = "El correo electrónico no puede exceder 100 caracteres")]
+    public string Email { get; set; } = string.Empty;
 }
 
 public class UpdateOwnerDto
@@ -49,4 +66,6 @@ public class UpdateOwnerDto
     public string Address { get; set; } = string.Empty;
     public string? Photo { get; set; }
     public DateOnly Birthday { get; set; }
+    public string DocumentNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 }

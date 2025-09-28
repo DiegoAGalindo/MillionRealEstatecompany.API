@@ -78,10 +78,15 @@ public class OwnersController : ControllerBase
             var owner = await _ownerService.CreateOwnerAsync(createOwnerDto);
             return CreatedAtAction(nameof(GetOwner), new { id = owner.IdOwner }, owner);
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation error creating owner: {Message}", ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating owner");
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 
@@ -99,10 +104,15 @@ public class OwnersController : ControllerBase
 
             return Ok(owner);
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Validation error updating owner with id {Id}: {Message}", id, ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating owner with id {Id}", id);
-            return StatusCode(500, "Internal server error");
+            return StatusCode(500, new { message = "Internal server error" });
         }
     }
 

@@ -38,6 +38,13 @@ public class OwnerService : IOwnerService
             throw new ArgumentException("La fecha de nacimiento es obligatoria");
         }
 
+        // Validar que el número de documento no exista (único campo que debe ser único)
+        var documentExists = await _unitOfWork.Owners.DocumentNumberExistsAsync(createOwnerDto.DocumentNumber);
+        if (documentExists)
+        {
+            throw new ArgumentException($"Ya existe un propietario con el número de documento '{createOwnerDto.DocumentNumber}'");
+        }
+
         var owner = _mapper.Map<Owner>(createOwnerDto);
         await _unitOfWork.Owners.AddAsync(owner);
         await _unitOfWork.SaveChangesAsync();
@@ -49,6 +56,14 @@ public class OwnerService : IOwnerService
         var existingOwner = await _unitOfWork.Owners.GetByIdAsync(id);
         if (existingOwner == null)
             return null;
+
+        // Validar que el número de documento no exista (debe ser único en toda la base de datos)
+        // Si el documento ya existe y no es el mismo propietario, no permitir la actualización
+        var documentExists = await _unitOfWork.Owners.DocumentNumberExistsAsync(updateOwnerDto.DocumentNumber);
+        if (documentExists && existingOwner.DocumentNumber != updateOwnerDto.DocumentNumber)
+        {
+            throw new ArgumentException($"Ya existe un propietario con el número de documento '{updateOwnerDto.DocumentNumber}'");
+        }
 
         _mapper.Map(updateOwnerDto, existingOwner);
         await _unitOfWork.Owners.UpdateAsync(existingOwner);
