@@ -44,6 +44,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
             entity.Property(e => e.CodeInternal).IsRequired().HasMaxLength(50);
 
+            // Configurar índices para optimizar consultas frecuentes
+            entity.HasIndex(e => e.CodeInternal).IsUnique(); // CodeInternal debe ser único
+            entity.HasIndex(e => e.IdOwner); // Índice para búsquedas por propietario
+            entity.HasIndex(e => e.Price); // Índice para filtros por precio
+
             entity.HasOne(e => e.Owner)
                 .WithMany(o => o.Properties)
                 .HasForeignKey(e => e.IdOwner)

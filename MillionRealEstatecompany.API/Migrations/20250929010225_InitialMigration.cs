@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MillionRealEstatecompany.API.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -110,9 +110,20 @@ namespace MillionRealEstatecompany.API.Migrations
                 column: "Email");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Properties_CodeInternal",
+                table: "Properties",
+                column: "CodeInternal",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Properties_IdOwner",
                 table: "Properties",
                 column: "IdOwner");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Properties_Price",
+                table: "Properties",
+                column: "Price");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PropertyImages_IdProperty",

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MillionRealEstatecompany.API.Data;
 using MillionRealEstatecompany.API.Interfaces;
+using MillionRealEstatecompany.API.Middleware;
 using MillionRealEstatecompany.API.Models;
 using MillionRealEstatecompany.API.Repositories;
 using MillionRealEstatecompany.API.Services;
@@ -13,6 +14,18 @@ builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection(DatabaseSettings.SectionName));
 
 builder.Services.AddControllers();
+
+// CORS Policy
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 var databaseSettings = builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>() ?? new DatabaseSettings();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -54,6 +67,9 @@ builder.Services.AddScoped<IPropertyTraceService, PropertyTraceService>();
 
 builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 
+// Health Checks
+builder.Services.AddHealthChecks();
+
 builder.Services.AddEndpointsApiExplorer();
 
 var apiSettings = builder.Configuration.GetSection(ApiSettings.SectionName).Get<ApiSettings>() ?? new ApiSettings();
@@ -80,6 +96,12 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Global exception handling middleware
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// Enable CORS
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
@@ -114,6 +136,13 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
 }
 
 app.UseAuthorization();
+
+// Health check endpoints
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions()
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.MapControllers();
 
