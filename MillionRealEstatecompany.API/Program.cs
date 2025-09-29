@@ -1,17 +1,21 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using MillionRealEstatecompany.API.Data;
 using MillionRealEstatecompany.API.Interfaces;
 using MillionRealEstatecompany.API.Middleware;
 using MillionRealEstatecompany.API.Models;
 using MillionRealEstatecompany.API.Repositories;
 using MillionRealEstatecompany.API.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<ApiSettings>(
-    builder.Configuration.GetSection(ApiSettings.SectionName));
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection(DatabaseSettings.SectionName));
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection(JwtSettings.SectionName));
 
 builder.Services.AddControllers();
 
@@ -67,23 +71,89 @@ builder.Services.AddScoped<IPropertyTraceService, PropertyTraceService>();
 
 builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 
+// JWT Authentication Configuration
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not found.");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero // Reduce default clock skew from 5 minutes to 0
+    };
+
+    // Events for better logging and debugging
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError("Authentication failed: {Exception}", context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("Token validated for user: {User}", context.Principal?.Identity?.Name);
+            return Task.CompletedTask;
+        }
+    };
+});
+
+builder.Services.AddAuthorization();
+
 // Health Checks
 builder.Services.AddHealthChecks();
 
 builder.Services.AddEndpointsApiExplorer();
 
-var apiSettings = builder.Configuration.GetSection(ApiSettings.SectionName).Get<ApiSettings>() ?? new ApiSettings();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = apiSettings.Title,
-        Version = apiSettings.Version,
-        Description = apiSettings.Description,
-        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        Title = "Million Real Estate API",
+        Version = "v1.0",
+        Description = "API para gestión de propiedades inmobiliarias con autenticación JWT"
+    });
+
+    // JWT Authentication configuration for Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
         {
-            Name = apiSettings.ContactName,
-            Email = apiSettings.ContactEmail
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
         }
     });
 
@@ -102,6 +172,10 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 // Enable CORS
 app.UseCors();
+
+// Authentication and Authorization middleware (order is important)
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Only initialize database in Development and Docker environments (NOT in Testing or Production)
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
@@ -133,8 +207,6 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         throw;
     }
 }
-
-app.UseAuthorization();
 
 // Health check endpoints
 app.MapHealthChecks("/health");

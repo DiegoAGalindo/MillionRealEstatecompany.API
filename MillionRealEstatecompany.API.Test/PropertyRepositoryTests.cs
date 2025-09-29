@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using MillionRealEstatecompany.API.Data;
+using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Models;
 using MillionRealEstatecompany.API.Repositories;
 
@@ -203,6 +204,243 @@ namespace MillionRealEstatecompany.API.Test
             propertiesForOwner1.Should().NotBeNull();
             propertiesForOwner1.Should().HaveCount(2);
             propertiesForOwner1.Should().AllSatisfy(p => p.IdOwner.Should().Be(owner1.IdOwner));
+        }
+
+        #endregion
+
+        #region SearchProperties Tests
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldFilterByPriceRange()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Property 1", Address = "Address 1", Price = 100000, CodeInternal = "PROP001", Year = 2020, IdOwner = owner.IdOwner },
+                new() { Name = "Property 2", Address = "Address 2", Price = 250000, CodeInternal = "PROP002", Year = 2021, IdOwner = owner.IdOwner },
+                new() { Name = "Property 3", Address = "Address 3", Price = 400000, CodeInternal = "PROP003", Year = 2022, IdOwner = owner.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter { MinPrice = 200000, MaxPrice = 300000 };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Property 2");
+            result.First().Price.Should().Be(250000);
+        }
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldFilterByYearRange()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Property 1", Address = "Address 1", Price = 100000, CodeInternal = "PROP001", Year = 2018, IdOwner = owner.IdOwner },
+                new() { Name = "Property 2", Address = "Address 2", Price = 200000, CodeInternal = "PROP002", Year = 2020, IdOwner = owner.IdOwner },
+                new() { Name = "Property 3", Address = "Address 3", Price = 300000, CodeInternal = "PROP003", Year = 2022, IdOwner = owner.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter { MinYear = 2019, MaxYear = 2021 };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Property 2");
+            result.First().Year.Should().Be(2020);
+        }
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldFilterByOwner()
+        {
+            // Arrange
+            var owner1 = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+
+            var owner2 = new Owner
+            {
+                Name = "Jane Smith",
+                Address = "456 Oak Ave",
+                Birthday = new DateOnly(1990, 5, 15),
+                DocumentNumber = "87654321",
+                Email = "jane@example.com"
+            };
+
+            await _context.Owners.AddRangeAsync(owner1, owner2);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Property 1", Address = "Address 1", Price = 100000, CodeInternal = "PROP001", Year = 2020, IdOwner = owner1.IdOwner },
+                new() { Name = "Property 2", Address = "Address 2", Price = 200000, CodeInternal = "PROP002", Year = 2021, IdOwner = owner2.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter { OwnerId = owner1.IdOwner };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Property 1");
+            result.First().IdOwner.Should().Be(owner1.IdOwner);
+        }
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldFilterByCity()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Property 1", Address = "123 Main St, Bogotá", Price = 100000, CodeInternal = "PROP001", Year = 2020, IdOwner = owner.IdOwner },
+                new() { Name = "Property 2", Address = "456 Oak Ave, Medellín", Price = 200000, CodeInternal = "PROP002", Year = 2021, IdOwner = owner.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter { City = "Bogotá" };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Property 1");
+            result.First().Address.Should().Contain("Bogotá");
+        }
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldFilterByName()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Apartamento Zona Rosa", Address = "Address 1", Price = 100000, CodeInternal = "PROP001", Year = 2020, IdOwner = owner.IdOwner },
+                new() { Name = "Casa Campestre", Address = "Address 2", Price = 200000, CodeInternal = "PROP002", Year = 2021, IdOwner = owner.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter { Name = "Apartamento" };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Apartamento Zona Rosa");
+        }
+
+        [Test]
+        public async Task PropertyRepository_SearchPropertiesAsync_ShouldCombineMultipleFilters()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var properties = new List<Property>
+            {
+                new() { Name = "Property 1", Address = "123 Main St, Bogotá", Price = 250000, CodeInternal = "PROP001", Year = 2020, IdOwner = owner.IdOwner },
+                new() { Name = "Property 2", Address = "456 Oak Ave, Bogotá", Price = 350000, CodeInternal = "PROP002", Year = 2019, IdOwner = owner.IdOwner },
+                new() { Name = "Property 3", Address = "789 Pine St, Medellín", Price = 300000, CodeInternal = "PROP003", Year = 2020, IdOwner = owner.IdOwner }
+            };
+
+            await _context.Properties.AddRangeAsync(properties);
+            await _context.SaveChangesAsync();
+
+            var repository = new PropertyRepository(_context);
+            var filter = new PropertySearchFilter 
+            { 
+                MinPrice = 200000, 
+                MaxPrice = 300000, 
+                MinYear = 2020, 
+                City = "Bogotá" 
+            };
+
+            // Act
+            var result = await repository.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().HaveCount(1);
+            result.First().Name.Should().Be("Property 1");
         }
 
         #endregion

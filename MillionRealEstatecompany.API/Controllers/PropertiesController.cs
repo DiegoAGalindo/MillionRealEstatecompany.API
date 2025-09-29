@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Interfaces;
@@ -9,6 +10,7 @@ namespace MillionRealEstatecompany.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PropertiesController : ControllerBase
 {
     private readonly IPropertyService _propertyService;
@@ -158,6 +160,54 @@ public class PropertiesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating property with id {Id}", id);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Actualiza específicamente el precio de una propiedad
+    /// </summary>
+    /// <param name="id">Identificador de la propiedad</param>
+    /// <param name="priceUpdateDto">Nuevo precio de la propiedad</param>
+    /// <returns>Datos de la propiedad con el precio actualizado</returns>
+    [HttpPatch("{id}/price")]
+    public async Task<ActionResult<PropertyDto>> UpdatePropertyPrice(int id, UpdatePropertyPriceDto priceUpdateDto)
+    {
+        try
+        {
+            var property = await _propertyService.UpdatePropertyPriceAsync(id, priceUpdateDto.Price);
+            if (property == null)
+                return NotFound();
+
+            return Ok(property);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating property price with id {Id}", id);
+            return StatusCode(500, new { message = "Internal server error" });
+        }
+    }
+
+    /// <summary>
+    /// Busca propiedades aplicando filtros específicos
+    /// </summary>
+    /// <param name="filter">Filtros de búsqueda</param>
+    /// <returns>Lista de propiedades que cumplen los filtros</returns>
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<PropertyDto>>> SearchProperties([FromQuery] PropertySearchFilter filter)
+    {
+        try
+        {
+            var properties = await _propertyService.SearchPropertiesAsync(filter);
+            return Ok(properties);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching properties with filters {@Filter}", filter);
             return StatusCode(500, new { message = "Internal server error" });
         }
     }

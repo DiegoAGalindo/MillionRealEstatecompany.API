@@ -487,5 +487,131 @@ namespace MillionRealEstatecompany.API.Test
         }
 
         #endregion
+
+        #region UpdatePropertyPrice Tests
+
+        [Test]
+        public async Task UpdatePropertyPrice_ShouldReturnOkWithUpdatedProperty_WhenPropertyExists()
+        {
+            // Arrange
+            var propertyId = 1;
+            var priceUpdateDto = new UpdatePropertyPriceDto { Price = 500000m };
+            var updatedProperty = new PropertyDto { IdProperty = propertyId, Name = "Property 1", Price = 500000m };
+
+            _mockPropertyService.Setup(x => x.UpdatePropertyPriceAsync(propertyId, priceUpdateDto.Price))
+                .ReturnsAsync(updatedProperty);
+
+            // Act
+            var result = await _controller.UpdatePropertyPrice(propertyId, priceUpdateDto);
+
+            // Assert
+            result.Result.Should().BeOfType<OkObjectResult>();
+            var okResult = result.Result as OkObjectResult;
+            okResult!.Value.Should().BeEquivalentTo(updatedProperty);
+        }
+
+        [Test]
+        public async Task UpdatePropertyPrice_ShouldReturnNotFound_WhenPropertyDoesNotExist()
+        {
+            // Arrange
+            var propertyId = 1;
+            var priceUpdateDto = new UpdatePropertyPriceDto { Price = 500000m };
+
+            _mockPropertyService.Setup(x => x.UpdatePropertyPriceAsync(propertyId, priceUpdateDto.Price))
+                .ReturnsAsync((PropertyDto?)null);
+
+            // Act
+            var result = await _controller.UpdatePropertyPrice(propertyId, priceUpdateDto);
+
+            // Assert
+            result.Result.Should().BeOfType<NotFoundResult>();
+        }
+
+        [Test]
+        public async Task UpdatePropertyPrice_ShouldReturnBadRequest_WhenArgumentExceptionIsThrown()
+        {
+            // Arrange
+            var propertyId = 1;
+            var priceUpdateDto = new UpdatePropertyPriceDto { Price = -100m };
+
+            _mockPropertyService.Setup(x => x.UpdatePropertyPriceAsync(propertyId, priceUpdateDto.Price))
+                .ThrowsAsync(new ArgumentException("El precio debe ser mayor a 0"));
+
+            // Act
+            var result = await _controller.UpdatePropertyPrice(propertyId, priceUpdateDto);
+
+            // Assert
+            result.Result.Should().BeOfType<BadRequestObjectResult>();
+        }
+
+        #endregion
+
+        #region SearchProperties Tests
+
+        [Test]
+        public async Task SearchProperties_ShouldReturnOkWithFilteredProperties_WhenFiltersAreApplied()
+        {
+            // Arrange
+            var filter = new PropertySearchFilter 
+            { 
+                MinPrice = 100000, 
+                MaxPrice = 500000, 
+                OwnerId = 1 
+            };
+            var filteredProperties = new List<PropertyDto>
+            {
+                new PropertyDto { IdProperty = 1, Name = "Property 1", Price = 300000, IdOwner = 1 }
+            };
+
+            _mockPropertyService.Setup(x => x.SearchPropertiesAsync(filter))
+                .ReturnsAsync(filteredProperties);
+
+            // Act
+            var result = await _controller.SearchProperties(filter);
+
+            // Assert
+            result.Result.Should().BeOfType<OkObjectResult>();
+            var okResult = result.Result as OkObjectResult;
+            okResult!.Value.Should().BeEquivalentTo(filteredProperties);
+        }
+
+        [Test]
+        public async Task SearchProperties_ShouldReturnEmptyList_WhenNoPropertiesMatchFilters()
+        {
+            // Arrange
+            var filter = new PropertySearchFilter { MinPrice = 1000000 };
+            var emptyList = new List<PropertyDto>();
+
+            _mockPropertyService.Setup(x => x.SearchPropertiesAsync(filter))
+                .ReturnsAsync(emptyList);
+
+            // Act
+            var result = await _controller.SearchProperties(filter);
+
+            // Assert
+            result.Result.Should().BeOfType<OkObjectResult>();
+            var okResult = result.Result as OkObjectResult;
+            var properties = okResult!.Value as IEnumerable<PropertyDto>;
+            properties.Should().BeEmpty();
+        }
+
+        [Test]
+        public async Task SearchProperties_ShouldReturnInternalServerError_WhenExceptionIsThrown()
+        {
+            // Arrange
+            var filter = new PropertySearchFilter();
+            _mockPropertyService.Setup(x => x.SearchPropertiesAsync(filter))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _controller.SearchProperties(filter);
+
+            // Assert
+            result.Result.Should().BeOfType<ObjectResult>();
+            var objectResult = result.Result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
+        #endregion
     }
 }

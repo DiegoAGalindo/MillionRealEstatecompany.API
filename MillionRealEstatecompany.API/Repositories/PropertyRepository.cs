@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MillionRealEstatecompany.API.Data;
+using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Interfaces;
 using MillionRealEstatecompany.API.Models;
 
@@ -54,6 +55,60 @@ public class PropertyRepository : Repository<Property>, IPropertyRepository
         return await _dbSet
             .Include(p => p.Owner)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Busca propiedades aplicando filtros específicos
+    /// </summary>
+    /// <param name="filter">Filtros de búsqueda</param>
+    /// <returns>Lista de propiedades que cumplen los filtros</returns>
+    public async Task<IEnumerable<Property>> SearchPropertiesAsync(PropertySearchFilter filter)
+    {
+        var query = _dbSet.Include(p => p.Owner).AsQueryable();
+
+        // Filtro por precio mínimo
+        if (filter.MinPrice.HasValue)
+        {
+            query = query.Where(p => p.Price >= filter.MinPrice.Value);
+        }
+
+        // Filtro por precio máximo
+        if (filter.MaxPrice.HasValue)
+        {
+            query = query.Where(p => p.Price <= filter.MaxPrice.Value);
+        }
+
+        // Filtro por año mínimo
+        if (filter.MinYear.HasValue)
+        {
+            query = query.Where(p => p.Year >= filter.MinYear.Value);
+        }
+
+        // Filtro por año máximo
+        if (filter.MaxYear.HasValue)
+        {
+            query = query.Where(p => p.Year <= filter.MaxYear.Value);
+        }
+
+        // Filtro por propietario
+        if (filter.OwnerId.HasValue)
+        {
+            query = query.Where(p => p.IdOwner == filter.OwnerId.Value);
+        }
+
+        // Filtro por ciudad/dirección
+        if (!string.IsNullOrWhiteSpace(filter.City))
+        {
+            query = query.Where(p => p.Address.Contains(filter.City));
+        }
+
+        // Filtro por nombre
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+        {
+            query = query.Where(p => p.Name.Contains(filter.Name));
+        }
+
+        return await query.ToListAsync();
     }
 
     /// <summary>

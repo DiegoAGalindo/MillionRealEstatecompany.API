@@ -144,6 +144,41 @@ public class PropertyService : IPropertyService
     }
 
     /// <summary>
+    /// Actualiza únicamente el precio de una propiedad
+    /// </summary>
+    /// <param name="id">Identificador de la propiedad</param>
+    /// <param name="newPrice">Nuevo precio de la propiedad</param>
+    /// <returns>DTO de la propiedad con el precio actualizado, null si no existe</returns>
+    /// <exception cref="ArgumentException">Se lanza cuando el precio es inválido</exception>
+    public async Task<PropertyDto?> UpdatePropertyPriceAsync(int id, decimal newPrice)
+    {
+        if (newPrice <= 0)
+            throw new ArgumentException("El precio debe ser mayor a 0");
+
+        var existingProperty = await _unitOfWork.Properties.GetByIdAsync(id);
+        if (existingProperty == null)
+            return null;
+
+        existingProperty.Price = newPrice;
+        await _unitOfWork.Properties.UpdateAsync(existingProperty);
+        await _unitOfWork.SaveChangesAsync();
+
+        var updatedProperty = await _unitOfWork.Properties.GetPropertyWithDetailsAsync(id);
+        return _mapper.Map<PropertyDto>(updatedProperty);
+    }
+
+    /// <summary>
+    /// Busca propiedades aplicando filtros específicos
+    /// </summary>
+    /// <param name="filter">Filtros de búsqueda</param>
+    /// <returns>Lista de propiedades que cumplen los filtros</returns>
+    public async Task<IEnumerable<PropertyDto>> SearchPropertiesAsync(PropertySearchFilter filter)
+    {
+        var properties = await _unitOfWork.Properties.SearchPropertiesAsync(filter);
+        return _mapper.Map<IEnumerable<PropertyDto>>(properties);
+    }
+
+    /// <summary>
     /// Verifica si existe una propiedad con el identificador especificado
     /// </summary>
     /// <param name="id">Identificador de la propiedad</param>
