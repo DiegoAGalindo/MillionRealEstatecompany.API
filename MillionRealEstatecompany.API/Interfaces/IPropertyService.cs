@@ -13,6 +13,8 @@ public interface IPropertyService
     Task<IEnumerable<PropertyDto>> GetPropertiesByOwnerAsync(int ownerId);
     Task<PropertyDto> CreatePropertyAsync(CreatePropertyDto createPropertyDto);
     Task<PropertyDto?> UpdatePropertyAsync(int id, UpdatePropertyDto updatePropertyDto);
+    Task<PropertyDto?> UpdatePropertyPriceAsync(int id, decimal newPrice);
+    Task<IEnumerable<PropertyDto>> SearchPropertiesAsync(PropertySearchFilter filter);
     Task<bool> DeletePropertyAsync(int id);
     Task<bool> PropertyExistsAsync(int id);
 }

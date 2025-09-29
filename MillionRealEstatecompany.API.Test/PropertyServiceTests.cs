@@ -436,5 +436,173 @@ namespace MillionRealEstatecompany.API.Test
         }
 
         #endregion
+
+        #region UpdatePropertyPrice Tests
+
+        [Test]
+        public async Task UpdatePropertyPriceAsync_ShouldReturnUpdatedProperty_WhenPropertyExists()
+        {
+            // Arrange
+            var propertyId = 1;
+            var newPrice = 500000m;
+            var existingProperty = new Property
+            {
+                IdProperty = propertyId,
+                Name = "Test Property",
+                Address = "123 Test St",
+                Price = 100000m,
+                CodeInternal = "TEST001",
+                Year = 2020,
+                IdOwner = 1
+            };
+
+            var propertyWithDetails = new Property
+            {
+                IdProperty = propertyId,
+                Name = "Test Property",
+                Address = "123 Test St",
+                Price = newPrice,
+                CodeInternal = "TEST001",
+                Year = 2020,
+                IdOwner = 1,
+                Owner = new Owner { IdOwner = 1, Name = "Test Owner" }
+            };
+
+            var expectedDto = new PropertyDto
+            {
+                IdProperty = propertyId,
+                Name = "Test Property",
+                Address = "123 Test St",
+                Price = newPrice,
+                CodeInternal = "TEST001",
+                Year = 2020,
+                IdOwner = 1,
+                OwnerName = "Test Owner"
+            };
+
+            _mockUnitOfWork.Setup(x => x.Properties.GetByIdAsync(propertyId))
+                .ReturnsAsync(existingProperty);
+            _mockUnitOfWork.Setup(x => x.Properties.UpdateAsync(It.IsAny<Property>()))
+                .Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(x => x.SaveChangesAsync())
+                .ReturnsAsync(1);
+            _mockUnitOfWork.Setup(x => x.Properties.GetPropertyWithDetailsAsync(propertyId))
+                .ReturnsAsync(propertyWithDetails);
+            _mockMapper.Setup(x => x.Map<PropertyDto>(propertyWithDetails))
+                .Returns(expectedDto);
+
+            // Act
+            var result = await _propertyService.UpdatePropertyPriceAsync(propertyId, newPrice);
+
+            // Assert
+            result.Should().NotBeNull();
+            result!.Price.Should().Be(newPrice);
+            result.IdProperty.Should().Be(propertyId);
+        }
+
+        [Test]
+        public async Task UpdatePropertyPriceAsync_ShouldReturnNull_WhenPropertyDoesNotExist()
+        {
+            // Arrange
+            var propertyId = 1;
+            var newPrice = 500000m;
+
+            _mockUnitOfWork.Setup(x => x.Properties.GetByIdAsync(propertyId))
+                .ReturnsAsync((Property?)null);
+
+            // Act
+            var result = await _propertyService.UpdatePropertyPriceAsync(propertyId, newPrice);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Test]
+        public async Task UpdatePropertyPriceAsync_ShouldThrowArgumentException_WhenPriceIsInvalid()
+        {
+            // Arrange
+            var propertyId = 1;
+            var invalidPrice = -100m;
+
+            // Act & Assert
+            await FluentActions.Invoking(() => _propertyService.UpdatePropertyPriceAsync(propertyId, invalidPrice))
+                .Should().ThrowAsync<ArgumentException>()
+                .WithMessage("El precio debe ser mayor a 0");
+        }
+
+        #endregion
+
+        #region SearchProperties Tests
+
+        [Test]
+        public async Task SearchPropertiesAsync_ShouldReturnFilteredProperties()
+        {
+            // Arrange
+            var filter = new PropertySearchFilter
+            {
+                MinPrice = 100000,
+                MaxPrice = 500000,
+                OwnerId = 1
+            };
+
+            var properties = new List<Property>
+            {
+                new Property
+                {
+                    IdProperty = 1,
+                    Name = "Property 1",
+                    Price = 300000,
+                    IdOwner = 1,
+                    Owner = new Owner { IdOwner = 1, Name = "Owner 1" }
+                }
+            };
+
+            var expectedDtos = new List<PropertyDto>
+            {
+                new PropertyDto
+                {
+                    IdProperty = 1,
+                    Name = "Property 1",
+                    Price = 300000,
+                    IdOwner = 1,
+                    OwnerName = "Owner 1"
+                }
+            };
+
+            _mockUnitOfWork.Setup(x => x.Properties.SearchPropertiesAsync(filter))
+                .ReturnsAsync(properties);
+            _mockMapper.Setup(x => x.Map<IEnumerable<PropertyDto>>(properties))
+                .Returns(expectedDtos);
+
+            // Act
+            var result = await _propertyService.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().HaveCount(1);
+            result.First().Price.Should().Be(300000);
+        }
+
+        [Test]
+        public async Task SearchPropertiesAsync_ShouldReturnEmptyList_WhenNoPropertiesMatchFilters()
+        {
+            // Arrange
+            var filter = new PropertySearchFilter { MinPrice = 1000000 };
+            var emptyList = new List<Property>();
+
+            _mockUnitOfWork.Setup(x => x.Properties.SearchPropertiesAsync(filter))
+                .ReturnsAsync(emptyList);
+            _mockMapper.Setup(x => x.Map<IEnumerable<PropertyDto>>(emptyList))
+                .Returns(new List<PropertyDto>());
+
+            // Act
+            var result = await _propertyService.SearchPropertiesAsync(filter);
+
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().BeEmpty();
+        }
+
+        #endregion
     }
 }

@@ -121,3 +121,64 @@ public class PropertyDetailDto : PropertyDto
     public List<PropertyImageDto> Images { get; set; } = new();
     public List<PropertyTraceDto> Traces { get; set; } = new();
 }
+
+/// <summary>
+/// DTO para actualizar únicamente el precio de una propiedad
+/// </summary>
+public class UpdatePropertyPriceDto
+{
+    /// <summary>
+    /// Nuevo precio de la propiedad
+    /// </summary>
+    [Required(ErrorMessage = "El precio es obligatorio")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
+    public decimal Price { get; set; }
+}
+
+/// <summary>
+/// DTO para filtros de búsqueda de propiedades
+/// </summary>
+public class PropertySearchFilter
+{
+    /// <summary>
+    /// Precio mínimo de búsqueda
+    /// </summary>
+    [Range(0, double.MaxValue, ErrorMessage = "El precio mínimo debe ser mayor o igual a 0")]
+    public decimal? MinPrice { get; set; }
+
+    /// <summary>
+    /// Precio máximo de búsqueda
+    /// </summary>
+    [Range(0, double.MaxValue, ErrorMessage = "El precio máximo debe ser mayor o igual a 0")]
+    public decimal? MaxPrice { get; set; }
+
+    /// <summary>
+    /// Año mínimo de construcción
+    /// </summary>
+    [Range(1900, 2050, ErrorMessage = "El año mínimo debe estar entre 1900 y 2050")]
+    public int? MinYear { get; set; }
+
+    /// <summary>
+    /// Año máximo de construcción
+    /// </summary>
+    [Range(1900, 2050, ErrorMessage = "El año máximo debe estar entre 1900 y 2050")]
+    public int? MaxYear { get; set; }
+
+    /// <summary>
+    /// ID del propietario para filtrar
+    /// </summary>
+    [Range(1, int.MaxValue, ErrorMessage = "El ID del propietario debe ser mayor a 0")]
+    public int? OwnerId { get; set; }
+
+    /// <summary>
+    /// Ciudad o parte de la dirección para filtrar
+    /// </summary>
+    [StringLength(200, ErrorMessage = "La ciudad no puede exceder 200 caracteres")]
+    public string? City { get; set; }
+
+    /// <summary>
+    /// Nombre o parte del nombre de la propiedad
+    /// </summary>
+    [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
+    public string? Name { get; set; }
+}
