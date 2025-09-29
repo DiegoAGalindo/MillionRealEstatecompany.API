@@ -9,6 +9,7 @@ obj/
 # IDE and editor files
 .vscode/
 .vs/
+.github/
 
 # NuGet packages
 packages/
@@ -21,8 +22,27 @@ packages/
 Thumbs.db
 .DS_Store
 
-# Test results
+# Test results and coverage reports
 TestResults/
+CoverageReport/
+coveragereport/
+coverage.xml
+coverage.cobertura.xml
+coverage.opencover.xml
+coverage.json
+coverage.lcov
+lcov.info
+*.coverage
+*.coveragexml
+
+# Environment variables (sensitive data)
+# Para efectos del ejercicio el archivo se comenta la linea con el fin de subirlo al repositorio, sin embargo para un  proyecto real es recomendable no subir este archivo.
+# .env
+
+
+
+# Docker volumes
+postgres_data/
 
 # Rider
 .idea/
@@ -37,6 +57,9 @@ _ReSharper/
 
 # ASP.NET Core
 appsettings.Local.json
+
+# HTTP test files (development convenience)
+*.http
 
 # Entity Framework
 *.db
