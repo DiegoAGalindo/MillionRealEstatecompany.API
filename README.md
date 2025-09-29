@@ -100,6 +100,67 @@ docker-compose up --build -d
 - **Swagger UI**: http://localhost:8080/swagger/index.html
 - **PostgreSQL**: localhost:5432 (milliondb/postgres/postgres)
 
+## 🔐 Autenticación JWT
+
+Esta API utiliza autenticación JWT (JSON Web Token) para proteger todos los endpoints. **Todos los controladores requieren autenticación**.
+**⚠️ IMPORTANTE**: Si desea omitir la autenticación para pruebas rápidas, puede comentar la línea `app.UseAuthentication();` en `Program.cs`, O la anotacion `[Authorize]` que tienen los `[Controllers]`, pero no es recomendable para entornos reales.
+
+### 📝 Credenciales de Acceso
+
+Para obtener un token JWT, utiliza las siguientes credenciales:
+
+```json
+{
+  "username": "testmillion",
+  "password": "TestMillionPass"
+}
+```
+
+### 🚀 Cómo Usar la Autenticación
+
+#### Paso 1: Obtener Token JWT
+```http
+POST /api/Auth/login
+Content-Type: application/json
+
+{
+  "username": "testmillion",
+  "password": "TestMillionPass"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "message": "Login exitoso"
+}
+```
+
+#### Paso 2: Usar el Token en Requests
+Incluye el token en el header `Authorization` de todas las peticiones:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Paso 3: Usar Swagger UI
+1. Ve a http://localhost:8080/swagger/index.html
+2. Haz clic en el botón **"Authorize"** en la parte superior
+3. Ingresa: `Bearer {tu-token-jwt}`
+4. Haz clic en **"Authorize"**
+5. ¡Ya puedes probar todos los endpoints protegidos!
+
+### ⚙️ Configuración JWT
+
+Los tokens tienen las siguientes características:
+- **Algoritmo**: HMAC SHA256
+- **Expiración**: 60 minutos
+- **Emisor**: MillionRealEstate API
+- **Audiencia**: MillionRealEstate Users
+
+> **⚠️ Importante**: Sin autenticación, recibirás un error 401 (Unauthorized) en todos los endpoints excepto en `/api/Auth/login`.
+
 
 ## 📡 API Endpoints
 

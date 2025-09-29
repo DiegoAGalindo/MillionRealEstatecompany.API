@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Interfaces;
@@ -9,6 +10,7 @@ namespace MillionRealEstatecompany.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PropertiesController : ControllerBase
 {
     private readonly IPropertyService _propertyService;
