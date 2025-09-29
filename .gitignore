@@ -36,7 +36,10 @@ lcov.info
 *.coveragexml
 
 # Environment variables (sensitive data)
-.env
+# Para efectos del ejercicio el archivo se comenta la linea con el fin de subirlo al repositorio, sin embargo para un  proyecto real es recomendable no subir este archivo.
+# .env
+
+
 
 # Docker volumes
 postgres_data/

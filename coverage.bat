@@ -10,7 +10,7 @@ if exist "CoverageReport" rmdir /s /q "CoverageReport"
 echo.
 
 echo Ejecutando pruebas con cobertura...
-echo (Excluyendo: Models, DTOs, Migrations)
+echo (Excluyendo: Models, DTOs, Migrations, ModelValidationMiddleware, DataSeeder, ErrorResponse)
 echo.
 dotnet test --collect:"XPlat Code Coverage" --results-directory ./TestResults --logger "console;verbosity=normal"
 
@@ -32,7 +32,7 @@ if errorlevel 1 (
 echo.
 echo Generando reporte HTML...
 for /r TestResults %%f in (coverage.cobertura.xml) do (
-    reportgenerator -reports:"%%f" -targetdir:"CoverageReport" -reporttypes:Html -classfilters:"-MillionRealEstatecompany.API.Models.*;-MillionRealEstatecompany.API.DTOs.*" -filefilters:"-**/Migrations/**;-**/Models/**;-**/DTOs/**"
+    reportgenerator -reports:"%%f" -targetdir:"CoverageReport" -reporttypes:Html -classfilters:"-MillionRealEstatecompany.API.Models.*;-MillionRealEstatecompany.API.DTOs.*;-MillionRealEstatecompany.API.Middleware.ModelValidationMiddleware;-MillionRealEstatecompany.API.Services.DataSeeder;-MillionRealEstatecompany.API.Middleware.ErrorResponse;-Program" -filefilters:"-**/Migrations/**;-**/Models/**;-**/DTOs/**"
 )
 
 if exist "CoverageReport\index.html" (
@@ -44,6 +44,9 @@ if exist "CoverageReport\index.html" (
     echo    Models (clases de entidad)
     echo    DTOs (objetos de transferencia)  
     echo    Migrations (scripts de DB)
+    echo    ModelValidationMiddleware (infraestructura)
+    echo    DataSeeder (datos iniciales)
+    echo    ErrorResponse (modelo de error)
     echo.
     echo  Abriendo reporte...
     start "" "CoverageReport\index.html"

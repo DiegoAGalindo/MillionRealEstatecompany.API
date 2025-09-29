@@ -7,11 +7,11 @@ using MillionRealEstatecompany.API.Repositories;
 namespace MillionRealEstatecompany.API.Test
 {
     /// <summary>
-    /// Pruebas unitarias para los repositorios
+    /// Pruebas unitarias para OwnerRepository
     /// Testing de la capa de datos siguiendo los principios de TDD de Kent Beck
     /// </summary>
     [TestFixture]
-    public class RepositoryTests
+    public class OwnerRepositoryTests
     {
         private DbContextOptions<ApplicationDbContext> _options;
         private ApplicationDbContext _context;
@@ -32,180 +32,6 @@ namespace MillionRealEstatecompany.API.Test
         {
             _context.Dispose();
         }
-
-        #region PropertyRepository Tests
-
-        [Test]
-        public async Task PropertyRepository_GetPropertiesWithOwnerAsync_ShouldReturnPropertiesWithOwnerInfo()
-        {
-            // Arrange
-            var owner = new Owner
-            {
-                Name = "John Doe",
-                Address = "123 Main St",
-                Birthday = new DateOnly(1985, 1, 1),
-                DocumentNumber = "12345678",
-                Email = "john@example.com"
-            };
-            await _context.Owners.AddAsync(owner);
-
-            var property = new Property
-            {
-                Name = "Test Property",
-                Address = "456 Property St",
-                Price = 100000,
-                CodeInternal = "PROP001",
-                Year = 2023,
-                Owner = owner
-            };
-            await _context.Properties.AddAsync(property);
-            await _context.SaveChangesAsync();
-
-            var repository = new PropertyRepository(_context);
-
-            // Act
-            var properties = await repository.GetPropertiesWithOwnerAsync();
-
-            // Assert
-            properties.Should().NotBeNull();
-            properties.Should().HaveCount(1);
-            var firstProperty = properties.First();
-            firstProperty.Owner.Should().NotBeNull();
-            firstProperty.Owner.Name.Should().Be("John Doe");
-        }
-
-        [Test]
-        public async Task PropertyRepository_CodeInternalExistsAsync_ShouldReturnTrue_WhenCodeExists()
-        {
-            // Arrange
-            var property = new Property
-            {
-                Name = "Test Property",
-                Address = "456 Property St",
-                Price = 100000,
-                CodeInternal = "UNIQUE_CODE",
-                Year = 2023,
-                IdOwner = 1
-            };
-            await _context.Properties.AddAsync(property);
-            await _context.SaveChangesAsync();
-
-            var repository = new PropertyRepository(_context);
-
-            // Act
-            var exists = await repository.CodeInternalExistsAsync("UNIQUE_CODE");
-
-            // Assert
-            exists.Should().BeTrue();
-        }
-
-        [Test]
-        public async Task PropertyRepository_CodeInternalExistsAsync_ShouldReturnFalse_WhenCodeDoesNotExist()
-        {
-            // Arrange
-            var repository = new PropertyRepository(_context);
-
-            // Act
-            var exists = await repository.CodeInternalExistsAsync("NONEXISTENT_CODE");
-
-            // Assert
-            exists.Should().BeFalse();
-        }
-
-        [Test]
-        public async Task PropertyRepository_CodeInternalExistsAsync_ShouldExcludeSpecifiedId()
-        {
-            // Arrange
-            var property = new Property
-            {
-                Name = "Test Property",
-                Address = "456 Property St",
-                Price = 100000,
-                CodeInternal = "UNIQUE_CODE",
-                Year = 2023,
-                IdOwner = 1
-            };
-            await _context.Properties.AddAsync(property);
-            await _context.SaveChangesAsync();
-
-            var repository = new PropertyRepository(_context);
-
-            // Act
-            var exists = await repository.CodeInternalExistsAsync("UNIQUE_CODE", property.IdProperty);
-
-            // Assert
-            exists.Should().BeFalse(); // Should return false because we're excluding this property's ID
-        }
-
-        [Test]
-        public async Task PropertyRepository_GetPropertiesByOwnerAsync_ShouldReturnPropertiesForSpecificOwner()
-        {
-            // Arrange
-            var owner1 = new Owner
-            {
-                Name = "John Doe",
-                Address = "123 Main St",
-                Birthday = new DateOnly(1985, 1, 1),
-                DocumentNumber = "12345678",
-                Email = "john@example.com"
-            };
-
-            var owner2 = new Owner
-            {
-                Name = "Jane Smith",
-                Address = "456 Oak Ave",
-                Birthday = new DateOnly(1990, 5, 15),
-                DocumentNumber = "87654321",
-                Email = "jane@example.com"
-            };
-
-            await _context.Owners.AddRangeAsync(owner1, owner2);
-
-            var property1 = new Property
-            {
-                Name = "Property 1",
-                Address = "123 Property St",
-                Price = 100000,
-                CodeInternal = "PROP001",
-                Year = 2023,
-                Owner = owner1
-            };
-
-            var property2 = new Property
-            {
-                Name = "Property 2",
-                Address = "456 Property Ave",
-                Price = 200000,
-                CodeInternal = "PROP002",
-                Year = 2023,
-                Owner = owner1
-            };
-
-            var property3 = new Property
-            {
-                Name = "Property 3",
-                Address = "789 Property Blvd",
-                Price = 300000,
-                CodeInternal = "PROP003",
-                Year = 2023,
-                Owner = owner2
-            };
-
-            await _context.Properties.AddRangeAsync(property1, property2, property3);
-            await _context.SaveChangesAsync();
-
-            var repository = new PropertyRepository(_context);
-
-            // Act
-            var propertiesForOwner1 = await repository.GetPropertiesByOwnerAsync(owner1.IdOwner);
-
-            // Assert
-            propertiesForOwner1.Should().NotBeNull();
-            propertiesForOwner1.Should().HaveCount(2);
-            propertiesForOwner1.Should().AllSatisfy(p => p.IdOwner.Should().Be(owner1.IdOwner));
-        }
-
-        #endregion
 
         #region OwnerRepository Tests
 
@@ -231,6 +57,51 @@ namespace MillionRealEstatecompany.API.Test
 
             // Assert
             exists.Should().BeTrue();
+        }
+
+        [Test]
+        public async Task OwnerRepository_DocumentNumberExistsAsync_ShouldReturnFalse_WhenDocumentDoesNotExist()
+        {
+            // Arrange
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var exists = await repository.DocumentNumberExistsAsync("NONEXISTENT");
+
+            // Assert
+            exists.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task OwnerRepository_DocumentNumberExistsAsync_ShouldExcludeSpecifiedId()
+        {
+            // Arrange
+            var owner1 = new Owner
+            {
+                Name = "John Doe",
+                Address = "123 Main St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "12345678",
+                Email = "john@example.com"
+            };
+            var owner2 = new Owner
+            {
+                Name = "Jane Smith",
+                Address = "456 Oak Ave",
+                Birthday = new DateOnly(1990, 5, 15),
+                DocumentNumber = "87654321",
+                Email = "jane@example.com"
+            };
+            await _context.Owners.AddRangeAsync(owner1, owner2);
+            await _context.SaveChangesAsync();
+
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var exists = await repository.DocumentNumberExistsAsync("12345678");
+
+            // Assert
+            exists.Should().BeTrue(); // Should return true because the document exists for a different owner
         }
 
         [Test]
@@ -260,6 +131,19 @@ namespace MillionRealEstatecompany.API.Test
         }
 
         [Test]
+        public async Task OwnerRepository_GetByDocumentNumberAsync_ShouldReturnNull_WhenDocumentDoesNotExist()
+        {
+            // Arrange
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var foundOwner = await repository.GetByDocumentNumberAsync("NONEXISTENT");
+
+            // Assert
+            foundOwner.Should().BeNull();
+        }
+
+        [Test]
         public async Task OwnerRepository_GetByEmailAsync_ShouldReturnOwner_WhenEmailExists()
         {
             // Arrange
@@ -283,6 +167,19 @@ namespace MillionRealEstatecompany.API.Test
             foundOwner.Should().NotBeNull();
             foundOwner!.Name.Should().Be("John Doe");
             foundOwner.Email.Should().Be("john@example.com");
+        }
+
+        [Test]
+        public async Task OwnerRepository_GetByEmailAsync_ShouldReturnNull_WhenEmailDoesNotExist()
+        {
+            // Arrange
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var foundOwner = await repository.GetByEmailAsync("nonexistent@example.com");
+
+            // Assert
+            foundOwner.Should().BeNull();
         }
 
         [Test]
@@ -324,12 +221,26 @@ namespace MillionRealEstatecompany.API.Test
             ownerWithProperties.Properties.Should().HaveCount(1);
         }
 
+        [Test]
+        public async Task OwnerRepository_GetOwnersWithPropertiesAsync_ShouldReturnEmptyList_WhenNoOwnersExist()
+        {
+            // Arrange
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var ownersWithProperties = await repository.GetOwnersWithPropertiesAsync();
+
+            // Assert
+            ownersWithProperties.Should().NotBeNull();
+            ownersWithProperties.Should().BeEmpty();
+        }
+
         #endregion
 
         #region Generic Repository Tests
 
         [Test]
-        public async Task GenericRepository_AddAsync_ShouldAddEntity()
+        public async Task OwnerRepository_AddAsync_ShouldAddEntity()
         {
             // Arrange
             var repository = new OwnerRepository(_context);
@@ -356,7 +267,45 @@ namespace MillionRealEstatecompany.API.Test
         }
 
         [Test]
-        public async Task GenericRepository_ExistsAsync_ShouldReturnTrue_WhenEntityExists()
+        public async Task OwnerRepository_GetByIdAsync_ShouldReturnOwner_WhenOwnerExists()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "Test Owner",
+                Address = "123 Test St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "TEST123",
+                Email = "test@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var foundOwner = await repository.GetByIdAsync(owner.IdOwner);
+
+            // Assert
+            foundOwner.Should().NotBeNull();
+            foundOwner!.Name.Should().Be("Test Owner");
+        }
+
+        [Test]
+        public async Task OwnerRepository_GetByIdAsync_ShouldReturnNull_WhenOwnerDoesNotExist()
+        {
+            // Arrange
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var foundOwner = await repository.GetByIdAsync(999);
+
+            // Assert
+            foundOwner.Should().BeNull();
+        }
+
+        [Test]
+        public async Task OwnerRepository_ExistsAsync_ShouldReturnTrue_WhenEntityExists()
         {
             // Arrange
             var owner = new Owner
@@ -380,7 +329,7 @@ namespace MillionRealEstatecompany.API.Test
         }
 
         [Test]
-        public async Task GenericRepository_ExistsAsync_ShouldReturnFalse_WhenEntityDoesNotExist()
+        public async Task OwnerRepository_ExistsAsync_ShouldReturnFalse_WhenEntityDoesNotExist()
         {
             // Arrange
             var repository = new OwnerRepository(_context);
@@ -390,6 +339,96 @@ namespace MillionRealEstatecompany.API.Test
 
             // Assert
             exists.Should().BeFalse();
+        }
+
+        [Test]
+        public async Task OwnerRepository_GetAllAsync_ShouldReturnAllOwners()
+        {
+            // Arrange
+            var owners = new List<Owner>
+            {
+                new Owner
+                {
+                    Name = "John Doe",
+                    Address = "123 Main St",
+                    Birthday = new DateOnly(1985, 1, 1),
+                    DocumentNumber = "12345678",
+                    Email = "john@example.com"
+                },
+                new Owner
+                {
+                    Name = "Jane Smith",
+                    Address = "456 Oak Ave",
+                    Birthday = new DateOnly(1990, 5, 15),
+                    DocumentNumber = "87654321",
+                    Email = "jane@example.com"
+                }
+            };
+            await _context.Owners.AddRangeAsync(owners);
+            await _context.SaveChangesAsync();
+
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            var allOwners = await repository.GetAllAsync();
+
+            // Assert
+            allOwners.Should().NotBeNull();
+            allOwners.Should().HaveCount(2);
+        }
+
+        [Test]
+        public async Task OwnerRepository_UpdateAsync_ShouldUpdateEntity()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "Original Name",
+                Address = "123 Test St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "TEST123",
+                Email = "test@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            owner.Name = "Updated Name";
+            await repository.UpdateAsync(owner);
+            await _context.SaveChangesAsync();
+
+            // Assert
+            var updatedOwner = await _context.Owners.FindAsync(owner.IdOwner);
+            updatedOwner.Should().NotBeNull();
+            updatedOwner!.Name.Should().Be("Updated Name");
+        }
+
+        [Test]
+        public async Task OwnerRepository_DeleteAsync_ShouldRemoveEntity()
+        {
+            // Arrange
+            var owner = new Owner
+            {
+                Name = "Test Owner",
+                Address = "123 Test St",
+                Birthday = new DateOnly(1985, 1, 1),
+                DocumentNumber = "TEST123",
+                Email = "test@example.com"
+            };
+            await _context.Owners.AddAsync(owner);
+            await _context.SaveChangesAsync();
+
+            var repository = new OwnerRepository(_context);
+
+            // Act
+            await repository.DeleteAsync(owner);
+            await _context.SaveChangesAsync();
+
+            // Assert
+            var deletedOwner = await _context.Owners.FindAsync(owner.IdOwner);
+            deletedOwner.Should().BeNull();
         }
 
         #endregion

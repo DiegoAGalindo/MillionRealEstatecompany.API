@@ -103,7 +103,8 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 // Enable CORS
 app.UseCors();
 
-if (app.Environment.IsDevelopment())
+// Only initialize database in Development and Docker environments (NOT in Testing or Production)
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -111,10 +112,7 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Million Real Estate API V1");
         c.RoutePrefix = "swagger";
     });
-}
-// Only initialize database in Development and Docker environments (NOT in Testing or Production)
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
-{
+
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();

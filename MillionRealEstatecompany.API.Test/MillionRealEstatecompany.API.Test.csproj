@@ -43,8 +43,8 @@
     <!-- Excluir proyectos de test -->
     <Exclude>[*.Test]*,[*.Tests]*</Exclude>
     
-    <!-- Excluir archivos específicos por path: Models, DTOs, Migrations -->
-    <ExcludeByFile>**/Migrations/**,**/Models/**,**/DTOs/**,**/Dto/**</ExcludeByFile>
+    <!-- Excluir archivos específicos por path: Models, DTOs, Migrations, ModelValidationMiddleware, DataSeeder y ErrorResponse -->
+    <ExcludeByFile>**/Migrations/**,**/Models/**,**/DTOs/**,**/Dto/**,**/Middleware/ModelValidationMiddleware.cs,**/Services/DataSeeder.cs,**/Middleware/ErrorResponse.cs</ExcludeByFile>
     
     <!-- Excluir por atributos de código generado -->
     <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>

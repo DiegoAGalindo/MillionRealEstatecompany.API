@@ -390,6 +390,102 @@ namespace MillionRealEstatecompany.API.Test
             result.Should().BeOfType<NotFoundResult>();
         }
 
+        [Test]
+        public async Task GetPropertiesByOwner_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var ownerId = 1;
+            _mockPropertyService.Setup(x => x.GetPropertiesByOwnerAsync(ownerId))
+                .ThrowsAsync(new Exception("Database connection failed"));
+
+            // Act
+            var result = await _controller.GetPropertiesByOwner(ownerId);
+
+            // Assert
+            result.Result.Should().BeOfType<ObjectResult>();
+            var objectResult = result.Result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
+        [Test]
+        public async Task GetPropertyWithDetails_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var propertyId = 1;
+            _mockPropertyService.Setup(x => x.GetPropertyWithDetailsAsync(propertyId))
+                .ThrowsAsync(new Exception("Service unavailable"));
+
+            // Act
+            var result = await _controller.GetPropertyWithDetails(propertyId);
+
+            // Assert
+            result.Result.Should().BeOfType<ObjectResult>();
+            var objectResult = result.Result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
+        [Test]
+        public async Task CreateProperty_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var createDto = new CreatePropertyDto
+            {
+                Name = "Test Property",
+                Address = "123 Test St",
+                Price = 100000,
+                CodeInternal = "TEST001",
+                Year = 2023,
+                IdOwner = 1
+            };
+
+            _mockPropertyService.Setup(x => x.CreatePropertyAsync(createDto))
+                .ThrowsAsync(new Exception("Service error"));
+
+            // Act
+            var result = await _controller.CreateProperty(createDto);
+
+            // Assert
+            result.Result.Should().BeOfType<ObjectResult>();
+            var objectResult = result.Result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
+        [Test]
+        public async Task UpdateProperty_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var propertyId = 1;
+            var updateDto = new UpdatePropertyDto { Name = "Updated Property" };
+
+            _mockPropertyService.Setup(x => x.UpdatePropertyAsync(propertyId, updateDto))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act
+            var result = await _controller.UpdateProperty(propertyId, updateDto);
+
+            // Assert
+            result.Result.Should().BeOfType<ObjectResult>();
+            var objectResult = result.Result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
+        [Test]
+        public async Task DeleteProperty_ShouldReturnInternalServerError_WhenExceptionOccurs()
+        {
+            // Arrange
+            var propertyId = 1;
+            _mockPropertyService.Setup(x => x.DeletePropertyAsync(propertyId))
+                .ThrowsAsync(new Exception("Delete failed"));
+
+            // Act
+            var result = await _controller.DeleteProperty(propertyId);
+
+            // Assert
+            result.Should().BeOfType<ObjectResult>();
+            var objectResult = result as ObjectResult;
+            objectResult!.StatusCode.Should().Be(500);
+        }
+
         #endregion
     }
 }
