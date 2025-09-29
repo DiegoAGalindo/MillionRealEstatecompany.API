@@ -22,8 +22,18 @@ packages/
 Thumbs.db
 .DS_Store
 
-# Test results
+# Test results and coverage reports
 TestResults/
+CoverageReport/
+coveragereport/
+coverage.xml
+coverage.cobertura.xml
+coverage.opencover.xml
+coverage.json
+coverage.lcov
+lcov.info
+*.coverage
+*.coveragexml
 
 # Environment variables (sensitive data)
 .env

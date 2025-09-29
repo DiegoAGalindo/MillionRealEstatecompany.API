@@ -10,11 +10,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit.Analyzers" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.8" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,5 +33,28 @@
   <ItemGroup>
     <ProjectReference Include="..\MillionRealEstatecompany.API\MillionRealEstatecompany.API.csproj" />
   </ItemGroup>
+
+  <!-- Configuración de cobertura de código con exclusiones -->
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <CoverletOutput>./TestResults/</CoverletOutput>
+    
+    <!-- Excluir proyectos de test -->
+    <Exclude>[*.Test]*,[*.Tests]*</Exclude>
+    
+    <!-- Excluir archivos específicos por path: Models, DTOs, Migrations -->
+    <ExcludeByFile>**/Migrations/**,**/Models/**,**/DTOs/**,**/Dto/**</ExcludeByFile>
+    
+    <!-- Excluir por atributos de código generado -->
+    <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+    
+    <!-- Solo incluir el assembly principal -->
+    <Include>[MillionRealEstatecompany.API]*</Include>
+    
+    <!-- Los umbrales se pueden configurar opcionalmente -->
+    <!-- <Threshold>70</Threshold> -->
+    <!-- <ThresholdType>line</ThresholdType> -->
+  </PropertyGroup>
 
 </Project>

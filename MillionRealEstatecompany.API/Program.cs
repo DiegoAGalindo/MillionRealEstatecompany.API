@@ -112,6 +112,7 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = "swagger";
     });
 }
+// Only initialize database in Development and Docker environments (NOT in Testing or Production)
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
     using var scope = app.Services.CreateScope();
@@ -147,3 +148,8 @@ app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.Health
 app.MapControllers();
 
 app.Run();
+
+/// <summary>
+/// Partial Program class to enable integration testing
+/// </summary>
+public partial class Program { }
