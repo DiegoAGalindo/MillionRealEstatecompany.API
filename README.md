@@ -3,6 +3,9 @@
 ## 📋 Descripción
 
 API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET Core 8.0, Prueba Técnica para Million.
+- **🎬 Corto Video sobre el proyecto**: https://www.youtube.com/watch?v=aWd9jhYdTx0
+
+
 
 ## 🏗️ Arquitectura y Tecnologías
 
