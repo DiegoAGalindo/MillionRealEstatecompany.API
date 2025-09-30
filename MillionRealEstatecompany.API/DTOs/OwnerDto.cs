@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MillionRealEstatecompany.API.DTOs;
 
@@ -11,7 +11,7 @@ public class OwnerDto
     public string Name { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string? Photo { get; set; }
-    public DateOnly Birthday { get; set; }
+    public DateTime Birthday { get; set; }
     public string DocumentNumber { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }
@@ -42,7 +42,7 @@ public class CreateOwnerDto
     /// Fecha de nacimiento del propietario
     /// </summary>
     [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
-    public DateOnly? Birthday { get; set; }
+    public DateTime Birthday { get; set; }
 
     /// <summary>
     /// Número de documento de identificación del propietario
@@ -60,12 +60,35 @@ public class CreateOwnerDto
     public string Email { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// DTO para actualizar un propietario existente
+/// </summary>
 public class UpdateOwnerDto
 {
-    public string Name { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
+    /// <summary>
+    /// Nombre completo del propietario (opcional)
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
+    /// Dirección del propietario (opcional)
+    /// </summary>
+    public string? Address { get; set; }
+
+    /// <summary>
+    /// Foto del propietario (opcional)
+    /// </summary>
     public string? Photo { get; set; }
-    public DateOnly Birthday { get; set; }
-    public string DocumentNumber { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Fecha de nacimiento (opcional)
+    /// </summary>
+    public DateTime? Birthday { get; set; }
+
+    /// <summary>
+    /// Correo electrónico del propietario (opcional)
+    /// </summary>
+    [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido")]
+    [StringLength(100, ErrorMessage = "El correo electrónico no puede exceder 100 caracteres")]
+    public string? Email { get; set; }
 }

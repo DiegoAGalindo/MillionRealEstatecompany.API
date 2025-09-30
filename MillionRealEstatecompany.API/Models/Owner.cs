@@ -1,61 +1,80 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace MillionRealEstatecompany.API.Models;
 
 /// <summary>
-/// Representa un propietario de inmuebles en el sistema
+/// Representa un propietario de inmuebles en el sistema MongoDB
 /// </summary>
 public class Owner
 {
     /// <summary>
-    /// Identificador único del propietario
+    /// Identificador único de MongoDB
     /// </summary>
-    [Key]
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+
+    /// <summary>
+    /// Identificador numérico del propietario (compatibilidad API)
+    /// </summary>
+    [BsonElement("idOwner")]
     public int IdOwner { get; set; }
 
     /// <summary>
     /// Nombre completo del propietario
     /// </summary>
-    [Required]
-    [MaxLength(100)]
+    [BsonElement("name")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Dirección de residencia del propietario
     /// </summary>
-    [Required]
-    [MaxLength(200)]
+    [BsonElement("address")]
     public string Address { get; set; } = string.Empty;
 
     /// <summary>
     /// URL de la foto del propietario (opcional)
     /// </summary>
-    [MaxLength(500)]
+    [BsonElement("photo")]
     public string? Photo { get; set; }
 
     /// <summary>
     /// Fecha de nacimiento del propietario (solo fecha, sin hora)
     /// </summary>
-    public DateOnly Birthday { get; set; }
+    [BsonElement("birthday")]
+    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    public DateTime Birthday { get; set; }
 
     /// <summary>
     /// Número de documento de identificación del propietario (único)
     /// </summary>
-    [Required]
-    [MaxLength(20)]
+    [BsonElement("documentNumber")]
     public string DocumentNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Correo electrónico del propietario
     /// </summary>
-    [Required]
-    [MaxLength(100)]
-    [EmailAddress]
+    [BsonElement("email")]
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Colección de propiedades que posee este propietario
+    /// Número de propiedades que posee (metadata)
     /// </summary>
-    public virtual ICollection<Property> Properties { get; set; } = new List<Property>();
+    [BsonElement("propertiesCount")]
+    public int PropertiesCount { get; set; } = 0;
+
+    /// <summary>
+    /// Fecha de creación del documento
+    /// </summary>
+    [BsonElement("createdAt")]
+    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Fecha de última actualización
+    /// </summary>
+    [BsonElement("updatedAt")]
+    [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -329,4 +329,3 @@ dotnet test
 ## 👥 Autor
 
 - **Diego A. Galindo** - *Desarrollo inicial* - [DiegoAGalindo](https://github.com/DiegoAGalindo)
-

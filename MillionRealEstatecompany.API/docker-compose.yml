@@ -4,36 +4,31 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      db:
-        condition: service_healthy
+      - mongodb
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=${ASPNETCORE_URLS}
-      - ConnectionStrings__DefaultConnection=Host=${DB_HOST};Port=${DB_PORT};Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=millionrealestatedb
     networks:
       - million-network
     restart: unless-stopped
 
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  mongodb:
+    image: mongo:7.0
     ports:
-      - "5432:5432"
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mongodb_data:/data/db
     networks:
       - million-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d milliondb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  mongodb_data:
 
 networks:
   million-network:

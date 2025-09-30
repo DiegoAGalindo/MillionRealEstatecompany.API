@@ -1,131 +1,151 @@
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using MillionRealEstatecompany.API.Data;
-using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Interfaces;
 using MillionRealEstatecompany.API.Models;
+using MillionRealEstatecompany.API.DTOs;
 
 namespace MillionRealEstatecompany.API.Repositories;
 
 /// <summary>
-/// Repositorio para las operaciones de acceso a datos de propiedades
+/// Repositorio MongoDB para operaciones con Property
 /// </summary>
-public class PropertyRepository : Repository<Property>, IPropertyRepository
+public class PropertyRepository : IPropertyRepository
 {
-    /// <summary>
-    /// Inicializa una nueva instancia del repositorio de propiedades
-    /// </summary>
-    /// <param name="context">Contexto de la base de datos</param>
-    public PropertyRepository(ApplicationDbContext context) : base(context)
+    private readonly IMongoCollection<Property> _properties;
+
+    public PropertyRepository(MongoDbContext context)
     {
+        _properties = context.Properties;
     }
 
-    /// <summary>
-    /// Obtiene una propiedad con todos sus detalles incluyendo propietario, imágenes y trazas
-    /// </summary>
-    /// <param name="id">Identificador de la propiedad</param>
-    /// <returns>Propiedad con todos sus detalles o null si no se encuentra</returns>
-    public async Task<Property?> GetPropertyWithDetailsAsync(int id)
+    public async Task<IEnumerable<Property>> GetAllAsync()
     {
-        return await _dbSet
-            .Include(p => p.Owner)
-            .Include(p => p.PropertyImages)
-            .Include(p => p.PropertyTraces)
-            .FirstOrDefaultAsync(p => p.IdProperty == id);
+        return await _properties.Find(_ => true).ToListAsync();
     }
 
-    /// <summary>
-    /// Obtiene todas las propiedades que pertenecen a un propietario específico
-    /// </summary>
-    /// <param name="ownerId">Identificador del propietario</param>
-    /// <returns>Lista de propiedades del propietario con información del mismo</returns>
+    public async Task<Property?> GetByIdAsync(string id)
+    {
+        if (!ObjectId.TryParse(id, out var objectId))
+            return null;
+
+        return await _properties.Find(p => p.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task<Property?> GetByIdPropertyAsync(int idProperty)
+    {
+        return await _properties.Find(p => p.IdProperty == idProperty).FirstOrDefaultAsync();
+    }
+
+    public async Task<Property> CreateAsync(Property property)
+    {
+        property.IdProperty = await GetNextIdPropertyAsync();
+        property.CreatedAt = DateTime.UtcNow;
+        property.UpdatedAt = DateTime.UtcNow;
+        
+        await _properties.InsertOneAsync(property);
+        return property;
+    }
+
+    public async Task<Property?> UpdateAsync(string id, Property property)
+    {
+        if (!ObjectId.TryParse(id, out var objectId))
+            return null;
+
+        property.UpdatedAt = DateTime.UtcNow;
+        
+        var result = await _properties.ReplaceOneAsync(p => p.Id == id, property);
+        return result.MatchedCount > 0 ? property : null;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        if (!ObjectId.TryParse(id, out var objectId))
+            return false;
+
+        var result = await _properties.DeleteOneAsync(p => p.Id == id);
+        return result.DeletedCount > 0;
+    }
+
     public async Task<IEnumerable<Property>> GetPropertiesByOwnerAsync(int ownerId)
     {
-        return await _dbSet
-            .Where(p => p.IdOwner == ownerId)
-            .Include(p => p.Owner)
-            .ToListAsync();
+        return await _properties.Find(p => p.Owner.IdOwner == ownerId).ToListAsync();
     }
 
-    /// <summary>
-    /// Obtiene todas las propiedades con información de sus propietarios
-    /// </summary>
-    /// <returns>Lista de todas las propiedades con información del propietario</returns>
-    public async Task<IEnumerable<Property>> GetPropertiesWithOwnerAsync()
-    {
-        return await _dbSet
-            .Include(p => p.Owner)
-            .ToListAsync();
-    }
-
-    /// <summary>
-    /// Busca propiedades aplicando filtros específicos
-    /// </summary>
-    /// <param name="filter">Filtros de búsqueda</param>
-    /// <returns>Lista de propiedades que cumplen los filtros</returns>
     public async Task<IEnumerable<Property>> SearchPropertiesAsync(PropertySearchFilter filter)
     {
-        var query = _dbSet.Include(p => p.Owner).AsQueryable();
-
-        // Filtro por precio mínimo
-        if (filter.MinPrice.HasValue)
-        {
-            query = query.Where(p => p.Price >= filter.MinPrice.Value);
-        }
-
-        // Filtro por precio máximo
-        if (filter.MaxPrice.HasValue)
-        {
-            query = query.Where(p => p.Price <= filter.MaxPrice.Value);
-        }
-
-        // Filtro por año mínimo
-        if (filter.MinYear.HasValue)
-        {
-            query = query.Where(p => p.Year >= filter.MinYear.Value);
-        }
-
-        // Filtro por año máximo
-        if (filter.MaxYear.HasValue)
-        {
-            query = query.Where(p => p.Year <= filter.MaxYear.Value);
-        }
+        var filterBuilder = Builders<Property>.Filter;
+        var filters = new List<FilterDefinition<Property>>();
 
         // Filtro por propietario
         if (filter.OwnerId.HasValue)
         {
-            query = query.Where(p => p.IdOwner == filter.OwnerId.Value);
+            filters.Add(filterBuilder.Eq("owner.idOwner", filter.OwnerId.Value));
         }
 
-        // Filtro por ciudad/dirección
-        if (!string.IsNullOrWhiteSpace(filter.City))
+        // Filtro por rango de precio
+        if (filter.MinPrice.HasValue)
         {
-            query = query.Where(p => p.Address.Contains(filter.City));
+            filters.Add(filterBuilder.Gte(p => p.Price, filter.MinPrice.Value));
         }
-
-        // Filtro por nombre
-        if (!string.IsNullOrWhiteSpace(filter.Name))
+        
+        if (filter.MaxPrice.HasValue)
         {
-            query = query.Where(p => p.Name.Contains(filter.Name));
+            filters.Add(filterBuilder.Lte(p => p.Price, filter.MaxPrice.Value));
         }
 
-        return await query.ToListAsync();
+        // Filtro por año
+        if (filter.MinYear.HasValue)
+        {
+            filters.Add(filterBuilder.Gte(p => p.Year, filter.MinYear.Value));
+        }
+        
+        if (filter.MaxYear.HasValue)
+        {
+            filters.Add(filterBuilder.Lte(p => p.Year, filter.MaxYear.Value));
+        }
+
+        // Filtro por nombre (búsqueda de texto)
+        if (!string.IsNullOrEmpty(filter.Name))
+        {
+            filters.Add(filterBuilder.Regex(p => p.Name, new BsonRegularExpression(filter.Name, "i")));
+        }
+
+        // Filtro por ciudad (búsqueda de texto en dirección)
+        if (!string.IsNullOrEmpty(filter.City))
+        {
+            filters.Add(filterBuilder.Regex(p => p.Address, new BsonRegularExpression(filter.City, "i")));
+        }
+
+        // Combinar todos los filtros
+        var combinedFilter = filters.Count > 0 
+            ? filterBuilder.And(filters) 
+            : filterBuilder.Empty;
+
+        return await _properties.Find(combinedFilter).ToListAsync();
     }
 
-    /// <summary>
-    /// Verifica si existe una propiedad con el código interno especificado
-    /// </summary>
-    /// <param name="codeInternal">Código interno a verificar</param>
-    /// <param name="excludeId">ID de propiedad a excluir de la búsqueda (opcional)</param>
-    /// <returns>True si existe el código, false en caso contrario</returns>
-    public async Task<bool> CodeInternalExistsAsync(string codeInternal, int? excludeId = null)
+    public async Task<bool> CodeInternalExistsAsync(string codeInternal, string? excludeId = null)
     {
-        var query = _dbSet.Where(p => p.CodeInternal == codeInternal);
-
-        if (excludeId.HasValue)
+        var filter = Builders<Property>.Filter.Eq(p => p.CodeInternal, codeInternal);
+        
+        if (!string.IsNullOrEmpty(excludeId))
         {
-            query = query.Where(p => p.IdProperty != excludeId.Value);
+            filter = Builders<Property>.Filter.And(filter, 
+                Builders<Property>.Filter.Ne(p => p.Id, excludeId));
         }
 
-        return await query.AnyAsync();
+        var count = await _properties.CountDocumentsAsync(filter);
+        return count > 0;
+    }
+
+    public async Task<int> GetNextIdPropertyAsync()
+    {
+        var lastProperty = await _properties
+            .Find(_ => true)
+            .SortByDescending(p => p.IdProperty)
+            .FirstOrDefaultAsync();
+
+        return lastProperty?.IdProperty + 1 ?? 1;
     }
 }

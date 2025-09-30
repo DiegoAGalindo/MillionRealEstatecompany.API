@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
             signingCredentials: credentials
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-        return $"{tokenString}";
+        return $"Bearer {tokenString}";
     }
 }
 

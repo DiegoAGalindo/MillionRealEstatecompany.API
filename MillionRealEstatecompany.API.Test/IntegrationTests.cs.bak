@@ -1,0 +1,656 @@
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using MillionRealEstatecompany.API.Data;
+using MillionRealEstatecompany.API.DTOs;
+using MillionRealEstatecompany.API.Models;
+using MongoDB.Driver;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using Testcontainers.MongoDb;
+
+namespace MillionRealEstatecompany.API.Test
+{
+    /// <summary>
+    /// Base class for integration tests providing MongoDB TestContainer infrastructure
+    /// Following best practices from Jez Humble for test automation and Kent Beck for TDD
+    /// </summary>
+    public class BaseTest : IDisposable
+    {
+        protected WebApplicationFactory<Program> _factory;
+        protected HttpClient _client;
+        protected MongoDbContext _context;
+        protected MongoDbContainer _mongoContainer;
+        private bool _disposed = false;
+
+        protected BaseTest()
+        {
+            InitializeAsync().Wait();
+        }
+
+        private async Task InitializeAsync()
+        {
+            // Start MongoDB test container
+            _mongoContainer = new MongoDbBuilder()
+                .WithImage("mongo:7.0")
+                .WithPortBinding(27017, true)
+                .Build();
+
+            await _mongoContainer.StartAsync();
+
+            var connectionString = _mongoContainer.GetConnectionString();
+
+            _factory = new WebApplicationFactory<Program>()
+                .WithWebHostBuilder(builder =>
+                {
+                    builder.ConfigureServices(services =>
+                    {
+                        // Remove the existing MongoDB registration
+                        var mongoDescriptor = services.SingleOrDefault(
+                            d => d.ServiceType == typeof(MongoDbContext));
+                        if (mongoDescriptor != null)
+                        {
+                            services.Remove(mongoDescriptor);
+                        }
+
+                        var clientDescriptor = services.SingleOrDefault(
+                            d => d.ServiceType == typeof(IMongoClient));
+                        if (clientDescriptor != null)
+                        {
+                            services.Remove(clientDescriptor);
+                        }
+
+                        // Add test MongoDB configuration
+                        services.AddSingleton<IMongoClient>(sp => new MongoClient(connectionString));
+                        services.AddScoped<MongoDbContext>();
+                    });
+                });
+
+            _client = _factory.CreateClient();
+
+            // Initialize the database context
+            var scope = _factory.Services.CreateScope();
+            _context = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+        }
+
+        protected async Task CleanDatabaseAsync()
+        {
+            await _context.Properties.DeleteManyAsync(FilterDefinition<Property>.Empty);
+            await _context.Owners.DeleteManyAsync(FilterDefinition<Owner>.Empty);
+            await _context.PropertyTraces.DeleteManyAsync(FilterDefinition<PropertyTrace>.Empty);
+        }
+
+        protected async Task<string> GetValidJwtTokenAsync()
+        {
+            var loginRequest = new LoginRequest
+            {
+                Username = "testmillion",
+                Password = "TestMillionPass"
+            };
+
+            var json = JsonSerializer.Serialize(loginRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _client.PostAsync("/api/Auth/login", content);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            return tokenResponse.Token;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _context?.Dispose();
+                    _client?.Dispose();
+                    _factory?.Dispose();
+                    _mongoContainer?.DisposeAsync().AsTask().Wait();
+                }
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
+    /// Comprehensive integration tests for the Million Real Estate API
+    /// Implementing testing best practices with MongoDB TestContainers
+    /// </summary>
+    [TestFixture]
+    public class IntegrationTests : BaseTest
+    {
+        [SetUp]
+        public async Task SetUp()
+        {
+            await CleanDatabaseAsync();
+            await SeedTestDataAsync();
+            
+            // Set JWT token for authenticated requests
+            var token = await GetValidJwtTokenAsync();
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        private async Task SeedTestDataAsync()
+        {
+            // Add test owners
+            var owners = new List<Owner>
+            {
+                new Owner
+                {
+                    Name = "John Doe",
+                    Address = "123 Main Street",
+                    Birthday = new DateOnly(1985, 5, 15),
+                    DocumentNumber = "12345678",
+                    Email = "john@example.com"
+                },
+                new Owner
+                {
+                    Name = "Jane Smith",
+                    Address = "456 Oak Avenue",
+                    Birthday = new DateOnly(1990, 10, 20),
+                    DocumentNumber = "87654321",
+                    Email = "jane@example.com"
+                }
+            };
+            await _context.Owners.InsertManyAsync(owners);
+
+            // Add test properties with embedded owner data
+            var properties = new List<Property>
+            {
+                new Property
+                {
+                    Name = "Beautiful House",
+                    Address = "123 Property Street",
+                    Price = 250000,
+                    CodeInternal = "HOUSE001",
+                    Year = 2020,
+                    Owner = new EmbeddedOwner
+                    {
+                        IdOwner = owners[0].Id.ToString(),
+                        Name = owners[0].Name,
+                        Email = owners[0].Email
+                    }
+                },
+                new Property
+                {
+                    Name = "Modern Apartment",
+                    Address = "456 Apartment Avenue",
+                    Price = 180000,
+                    CodeInternal = "APT001",
+                    Year = 2022,
+                    Owner = new EmbeddedOwner
+                    {
+                        IdOwner = owners[1].Id.ToString(),
+                        Name = owners[1].Name,
+                        Email = owners[1].Email
+                    }
+                }
+            };
+            await _context.Properties.InsertManyAsync(properties);
+
+            // Add test property traces
+            var propertyTraces = new List<PropertyTrace>
+            {
+                new PropertyTrace
+                {
+                    DateSale = DateTime.UtcNow.AddDays(-30),
+                    Name = "Initial Sale",
+                    Value = 250000,
+                    Tax = 12500,
+                    PropertyId = properties[0].Id.ToString()
+                },
+                new PropertyTrace
+                {
+                    DateSale = DateTime.UtcNow.AddDays(-15),
+                    Name = "Price Update",
+                    Value = 180000,
+                    Tax = 9000,
+                    PropertyId = properties[1].Id.ToString()
+                }
+            };
+            await _context.PropertyTraces.InsertManyAsync(propertyTraces);
+        }
+
+        #region Authentication Tests
+
+        [Test]
+        public async Task Auth_Login_WithValidCredentials_ReturnsToken()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest
+            {
+                Username = "testmillion",
+                Password = "TestMillionPass"
+            };
+
+            var json = JsonSerializer.Serialize(loginRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PostAsync("/api/Auth/login", content);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            
+            loginResponse.Should().NotBeNull();
+            loginResponse.Token.Should().NotBeNullOrEmpty();
+            loginResponse.ExpirationDate.Should().BeAfter(DateTime.UtcNow);
+        }
+
+        [Test]
+        public async Task Auth_Login_WithInvalidCredentials_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new LoginRequest
+            {
+                Username = "invalid",
+                Password = "invalid"
+            };
+
+            var json = JsonSerializer.Serialize(loginRequest);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Act
+            var response = await _client.PostAsync("/api/Auth/login", content);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        #endregion
+
+        #region Properties Integration Tests
+
+        [Test]
+        public async Task Properties_GetAll_ShouldReturnAllProperties()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/properties");
+            var properties = await response.Content.ReadFromJsonAsync<List<PropertyDto>>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            properties.Should().NotBeNull();
+            properties.Should().HaveCountGreaterOrEqualTo(2);
+            properties.Should().Contain(p => p.Name == "Beautiful House");
+            properties.Should().Contain(p => p.Name == "Modern Apartment");
+        }
+
+        [Test]
+        public async Task Properties_GetById_ShouldReturnProperty_WhenPropertyExists()
+        {
+            // Arrange - Get a property ID from the database
+            var allProperties = await _context.Properties.Find(FilterDefinition<Property>.Empty).ToListAsync();
+            var firstProperty = allProperties.First();
+
+            // Act
+            var response = await _client.GetAsync($"/api/properties/{firstProperty.Id}");
+            var property = await response.Content.ReadFromJsonAsync<PropertyDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            property.Should().NotBeNull();
+            property!.IdProperty.Should().Be(firstProperty.Id.ToString());
+            property.Name.Should().Be(firstProperty.Name);
+        }
+
+        [Test]
+        public async Task Properties_GetById_ShouldReturnNotFound_WhenPropertyDoesNotExist()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/properties/507f1f77bcf86cd799439011");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Test]
+        public async Task Properties_Create_ShouldCreateProperty_WhenValidDataProvided()
+        {
+            // Arrange - Get an owner ID
+            var owners = await _context.Owners.Find(FilterDefinition<Owner>.Empty).ToListAsync();
+            var firstOwner = owners.First();
+
+            var newProperty = new CreatePropertyDto
+            {
+                Name = "New Test Property",
+                Address = "789 New Street",
+                Price = 300000,
+                CodeInternal = "NEW001",
+                Year = 2023,
+                IdOwner = firstOwner.Id.ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/properties", newProperty);
+            var createdProperty = await response.Content.ReadFromJsonAsync<PropertyDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            createdProperty.Should().NotBeNull();
+            createdProperty!.Name.Should().Be(newProperty.Name);
+            createdProperty.Address.Should().Be(newProperty.Address);
+            createdProperty.Price.Should().Be(newProperty.Price.Value);
+
+            // Verify it was actually created in the database
+            var getResponse = await _client.GetAsync($"/api/properties/{createdProperty.IdProperty}");
+            getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Test]
+        public async Task Properties_Create_ShouldReturnBadRequest_WhenOwnerDoesNotExist()
+        {
+            // Arrange
+            var newProperty = new CreatePropertyDto
+            {
+                Name = "Test Property",
+                Address = "123 Test Street",
+                Price = 100000,
+                CodeInternal = "TEST001",
+                Year = 2023,
+                IdOwner = "507f1f77bcf86cd799439999" // Non-existent owner ID
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/properties", newProperty);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Test]
+        public async Task Properties_Update_ShouldUpdateProperty_WhenValidDataProvided()
+        {
+            // Arrange - Get a property and owner
+            var properties = await _context.Properties.Find(FilterDefinition<Property>.Empty).ToListAsync();
+            var firstProperty = properties.First();
+            var owners = await _context.Owners.Find(FilterDefinition<Owner>.Empty).ToListAsync();
+            var firstOwner = owners.First();
+
+            var updateDto = new UpdatePropertyDto
+            {
+                Name = "Updated Beautiful House",
+                Address = "123 Updated Property Street",
+                Price = 275000,
+                CodeInternal = "HOUSE001",
+                Year = 2020,
+                IdOwner = firstOwner.Id.ToString()
+            };
+
+            // Act
+            var response = await _client.PutAsJsonAsync($"/api/properties/{firstProperty.Id}", updateDto);
+            var updatedProperty = await response.Content.ReadFromJsonAsync<PropertyDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            updatedProperty.Should().NotBeNull();
+            updatedProperty!.Name.Should().Be(updateDto.Name);
+            updatedProperty.Price.Should().Be(updateDto.Price);
+        }
+
+        [Test]
+        public async Task Properties_Delete_ShouldDeleteProperty_WhenPropertyExists()
+        {
+            // Arrange - Create a property to delete
+            var owners = await _context.Owners.Find(FilterDefinition<Owner>.Empty).ToListAsync();
+            var firstOwner = owners.First();
+
+            var newProperty = new CreatePropertyDto
+            {
+                Name = "Property to Delete",
+                Address = "123 Delete Street",
+                Price = 100000,
+                CodeInternal = "DELETE001",
+                Year = 2023,
+                IdOwner = firstOwner.Id.ToString()
+            };
+
+            var createResponse = await _client.PostAsJsonAsync("/api/properties", newProperty);
+            var createdProperty = await createResponse.Content.ReadFromJsonAsync<PropertyDto>();
+
+            // Act - Delete the property
+            var deleteResponse = await _client.DeleteAsync($"/api/properties/{createdProperty!.IdProperty}");
+
+            // Assert
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // Verify it was actually deleted
+            var getResponse = await _client.GetAsync($"/api/properties/{createdProperty.IdProperty}");
+            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Test]
+        public async Task Properties_Search_ShouldReturnFilteredResults()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/properties?filters.name=Beautiful");
+            var properties = await response.Content.ReadFromJsonAsync<List<PropertyDto>>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            properties.Should().NotBeNull();
+            properties.Should().Contain(p => p.Name.Contains("Beautiful"));
+        }
+
+        #endregion
+
+        #region Owners Integration Tests
+
+        [Test]
+        public async Task Owners_GetAll_ShouldReturnAllOwners()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/owners");
+            var owners = await response.Content.ReadFromJsonAsync<List<OwnerDto>>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            owners.Should().NotBeNull();
+            owners.Should().HaveCountGreaterOrEqualTo(2);
+            owners.Should().Contain(o => o.Name == "John Doe");
+            owners.Should().Contain(o => o.Name == "Jane Smith");
+        }
+
+        [Test]
+        public async Task Owners_GetById_ShouldReturnOwner_WhenOwnerExists()
+        {
+            // Arrange
+            var owners = await _context.Owners.Find(FilterDefinition<Owner>.Empty).ToListAsync();
+            var firstOwner = owners.First();
+
+            // Act
+            var response = await _client.GetAsync($"/api/owners/{firstOwner.Id}");
+            var owner = await response.Content.ReadFromJsonAsync<OwnerDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            owner.Should().NotBeNull();
+            owner!.IdOwner.Should().Be(firstOwner.Id.ToString());
+            owner.Name.Should().Be(firstOwner.Name);
+        }
+
+        [Test]
+        public async Task Owners_Create_ShouldCreateOwner_WhenValidDataProvided()
+        {
+            // Arrange
+            var newOwner = new CreateOwnerDto
+            {
+                Name = "New Test Owner",
+                Address = "789 New Owner Street",
+                Birthday = new DateOnly(1988, 3, 10),
+                DocumentNumber = "11111111",
+                Email = "newowner@example.com"
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/owners", newOwner);
+            var createdOwner = await response.Content.ReadFromJsonAsync<OwnerDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            createdOwner.Should().NotBeNull();
+            createdOwner!.Name.Should().Be(newOwner.Name);
+            createdOwner.DocumentNumber.Should().Be(newOwner.DocumentNumber);
+        }
+
+        [Test]
+        public async Task Owners_Update_ShouldUpdateOwner_WhenValidDataProvided()
+        {
+            // Arrange
+            var owners = await _context.Owners.Find(FilterDefinition<Owner>.Empty).ToListAsync();
+            var firstOwner = owners.First();
+
+            var updateDto = new UpdateOwnerDto
+            {
+                Name = "Updated John Doe",
+                Address = "456 Updated Street",
+                Birthday = firstOwner.Birthday,
+                DocumentNumber = firstOwner.DocumentNumber,
+                Email = "updatedjohn@example.com"
+            };
+
+            // Act
+            var response = await _client.PutAsJsonAsync($"/api/owners/{firstOwner.Id}", updateDto);
+            var updatedOwner = await response.Content.ReadFromJsonAsync<OwnerDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            updatedOwner.Should().NotBeNull();
+            updatedOwner!.Name.Should().Be(updateDto.Name);
+            updatedOwner.Email.Should().Be(updateDto.Email);
+        }
+
+        [Test]
+        public async Task Owners_Delete_ShouldDeleteOwner_WhenOwnerExists()
+        {
+            // Arrange - Create an owner to delete
+            var newOwner = new CreateOwnerDto
+            {
+                Name = "Owner to Delete",
+                Address = "123 Delete Street",
+                Birthday = new DateOnly(1990, 1, 1),
+                DocumentNumber = "99999999",
+                Email = "delete@example.com"
+            };
+
+            var createResponse = await _client.PostAsJsonAsync("/api/owners", newOwner);
+            var createdOwner = await createResponse.Content.ReadFromJsonAsync<OwnerDto>();
+
+            // Act
+            var deleteResponse = await _client.DeleteAsync($"/api/owners/{createdOwner!.IdOwner}");
+
+            // Assert
+            deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            // Verify it was actually deleted
+            var getResponse = await _client.GetAsync($"/api/owners/{createdOwner.IdOwner}");
+            getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        #endregion
+
+        #region Property Traces Integration Tests
+
+        [Test]
+        public async Task PropertyTraces_GetAll_ShouldReturnAllTraces()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/propertytraces");
+            var traces = await response.Content.ReadFromJsonAsync<List<PropertyTraceDto>>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            traces.Should().NotBeNull();
+            traces.Should().HaveCountGreaterOrEqualTo(2);
+        }
+
+        [Test]
+        public async Task PropertyTraces_GetById_ShouldReturnTrace_WhenTraceExists()
+        {
+            // Arrange
+            var traces = await _context.PropertyTraces.Find(FilterDefinition<PropertyTrace>.Empty).ToListAsync();
+            var firstTrace = traces.First();
+
+            // Act
+            var response = await _client.GetAsync($"/api/propertytraces/{firstTrace.Id}");
+            var trace = await response.Content.ReadFromJsonAsync<PropertyTraceDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            trace.Should().NotBeNull();
+            trace!.IdPropertyTrace.Should().Be(firstTrace.Id.ToString());
+        }
+
+        [Test]
+        public async Task PropertyTraces_Create_ShouldCreateTrace_WhenValidDataProvided()
+        {
+            // Arrange
+            var properties = await _context.Properties.Find(FilterDefinition<Property>.Empty).ToListAsync();
+            var firstProperty = properties.First();
+
+            var newTrace = new CreatePropertyTraceDto
+            {
+                DateSale = DateTime.UtcNow,
+                Name = "New Trace",
+                Value = 200000,
+                Tax = 10000,
+                PropertyId = firstProperty.Id.ToString()
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/propertytraces", newTrace);
+            var createdTrace = await response.Content.ReadFromJsonAsync<PropertyTraceDto>();
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            createdTrace.Should().NotBeNull();
+            createdTrace!.Name.Should().Be(newTrace.Name);
+            createdTrace.Value.Should().Be(newTrace.Value);
+        }
+
+        #endregion
+
+        #region Error Handling Tests
+
+        [Test]
+        public async Task API_ShouldReturn401_WhenNoAuthToken()
+        {
+            // Arrange - Create client without auth token
+            var unauthenticatedClient = _factory.CreateClient();
+
+            // Act
+            var response = await unauthenticatedClient.GetAsync("/api/properties");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Test]
+        public async Task API_ShouldReturn400_WhenInvalidModelState()
+        {
+            // Arrange - Invalid property data (missing required fields)
+            var invalidProperty = new { Name = "" };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/properties", invalidProperty);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        #endregion
+    }
+}

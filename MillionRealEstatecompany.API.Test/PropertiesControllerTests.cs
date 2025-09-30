@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using MillionRealEstatecompany.API.Controllers;
 using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Interfaces;
+using MillionRealEstatecompany.API.Services;
 using Moq;
 
 namespace MillionRealEstatecompany.API.Test

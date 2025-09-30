@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MillionRealEstatecompany.API;
 using MillionRealEstatecompany.API.Data;
 using MillionRealEstatecompany.API.Interfaces;
 using MillionRealEstatecompany.API.Middleware;
@@ -12,8 +12,11 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<DatabaseSettings>(
-    builder.Configuration.GetSection(DatabaseSettings.SectionName));
+// Configuración MongoDB
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection(MongoDbSettings.SectionName));
+
+// Configuración JWT
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection(JwtSettings.SectionName));
 
@@ -30,46 +33,22 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();
     });
 });
-var databaseSettings = builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>() ?? new DatabaseSettings();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.CommandTimeout(databaseSettings.CommandTimeout);
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorCodesToAdd: null);
-    });
+// Configuración MongoDB
+builder.Services.AddSingleton<MongoDbContext>();
 
-    if (builder.Environment.IsDevelopment() && databaseSettings.EnableSensitiveDataLogging)
-    {
-        options.EnableSensitiveDataLogging();
-    }
-
-    if (builder.Environment.IsDevelopment() && databaseSettings.EnableDetailedErrors)
-    {
-        options.EnableDetailedErrors();
-    }
-});
-
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IOwnerRepository, OwnerRepository>();
+// Registro de repositorios MongoDB
 builder.Services.AddScoped<IPropertyRepository, PropertyRepository>();
-builder.Services.AddScoped<IPropertyImageRepository, PropertyImageRepository>();
+builder.Services.AddScoped<IOwnerRepository, OwnerRepository>();
 builder.Services.AddScoped<IPropertyTraceRepository, PropertyTraceRepository>();
 
-builder.Services.AddScoped<IOwnerService, OwnerService>();
+// Registro de servicios
 builder.Services.AddScoped<IPropertyService, PropertyService>();
-builder.Services.AddScoped<IPropertyImageService, PropertyImageService>();
+builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IPropertyTraceService, PropertyTraceService>();
 
-builder.Services.AddScoped<IDataSeeder, DataSeeder>();
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // JWT Authentication Configuration
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -187,39 +166,17 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         c.RoutePrefix = "swagger";
     });
 
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
-
-    try
-    {
-        context.Database.Migrate();
-
-        if (!await dataSeeder.HasDataAsync())
-        {
-            await dataSeeder.SeedDataAsync();
-        }
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while initializing the database");
-        throw;
-    }
+    // MongoDB se conecta automáticamente, no necesita migración
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Million Real Estate API started with MongoDB");
 }
 
 // Health check endpoints
 app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions()
-{
-    Predicate = check => check.Tags.Contains("ready")
-});
 
 app.MapControllers();
 
 app.Run();
-
-/// <summary>
 /// Partial Program class to enable integration testing
 /// </summary>
 public partial class Program { }

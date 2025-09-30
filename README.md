@@ -16,7 +16,7 @@ API REST para la gestión de propiedades inmobiliarias desarrollada con ASP.NET 
 ### Stack Tecnológico
 
 - **Backend**: ASP.NET Core 8.0
-- **Base de Datos**: PostgreSQL con Entity Framework Core
+- **Base de Datos**: MongoDB con MongoDB.Driver
 - **Mapeo**: AutoMapper para DTOs
 - **Contenedores**: Docker & Docker Compose
 - **Documentación**: Swagger/OpenAPI
@@ -67,8 +67,8 @@ docker-compose up --build -d
 **🎯 Qué sucede automáticamente:**
 
 1. 🐳 Construye contenedor de la API
-2. 🗄️ Inicia PostgreSQL con credenciales del .env
-3. 📊 Aplica migración inicial unificada (crea todas las tablas e índices)
+2. 🗄️ Inicia MongoDB con credenciales del .env
+3. 📊 Crea base de datos MongoDB automáticamente
 4. 🌱 Carga 75 registros de datos de prueba
 5. 🚀 API lista en http://localhost:8080
 
@@ -98,7 +98,7 @@ docker-compose up --build -d
 
 - **API Base**: http://localhost:8080/api
 - **Swagger UI**: http://localhost:8080/swagger/index.html
-- **PostgreSQL**: localhost:5432 (milliondb/postgres/postgres)
+- **MongoDB**: localhost:27017 (milliondb/mongo/mongopass)
 
 ## 🔐 Autenticación JWT
 
@@ -228,14 +228,13 @@ MillionRealEstatecompany.API/
 │   ├── PropertyImage.cs
 │   └── PropertyTrace.cs
 ├── DTOs/                 # Data Transfer Objects
-├── Data/                 # Contexto EF Core y configuración
-│   ├── ApplicationDbContext.cs
+├── Data/                 # Contexto MongoDB y configuración
+│   ├── MongoDbContext.cs
 │   ├── MappingProfile.cs
 │   └── DataSeeder.cs
 ├── Interfaces/           # Contratos y abstracciones
 ├── Repositories/         # Implementación de repositorios
 ├── Services/            # Lógica de negocio
-├── Migrations/          # Migraciones de EF Core
 ├── Middleware/          # Middleware personalizado
 ├── .env                 # Variables de entorno
 ├── appsettings*.json    # Configuración por ambiente
@@ -249,19 +248,20 @@ MillionRealEstatecompany.API/
 ### Prerrequisitos para Desarrollo Local
 
 - **.NET 8.0 SDK** (instalado)
-- **PostgreSQL** (instalado y ejecutándose localmente)
+- **MongoDB** (instalado y ejecutándose localmente)
 - **Visual Studio** o **VS Code** (recomendado)
 
 ### Configuración de Base de Datos Local
 
-1. **Instalar PostgreSQL** localmente
+1. **Instalar MongoDB** localmente
 2. **Crear base de datos** `milliondb`
 3. **Configurar conexión** en `appsettings.Development.json`:
 
 ```json
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=milliondb;Username=postgres;Password=tu_password"
+  "MongoDbSettings": {
+    "ConnectionString": "mongodb://localhost:27017",
+    "DatabaseName": "milliondb"
   }
 }
 ```
@@ -275,11 +275,11 @@ cd MillionRealEstatecompany.API
 # 2. Restaurar paquetes NuGet
 dotnet restore
 
-# 3. Ejecutar la aplicación (las migraciones se aplican automáticamente)
+# 3. Ejecutar la aplicación (se conecta automáticamente a MongoDB)
 dotnet run
 ```
 
-**⚠️ Nota:** El desarrollo con Docker es **más fácil** porque no requiere instalar PostgreSQL localmente.
+**⚠️ Nota:** El desarrollo con Docker es **más fácil** porque no requiere instalar MongoDB localmente.
 
 ## 🎯 Automatización y Beneficios
 
@@ -291,10 +291,10 @@ El sistema está diseñado para **desarrollo ágil**. En `Program.cs`:
 // Se ejecuta automáticamente al iniciar
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
 {
-    context.Database.Migrate();           // 1. Crear/actualizar tablas
-    if (!await dataSeeder.HasDataAsync()) // 2. Solo si está vacía
+    // MongoDB se conecta automáticamente      // 1. Conectar a MongoDB
+    if (!await dataSeeder.HasDataAsync())     // 2. Solo si está vacía
     {
-        await dataSeeder.SeedDataAsync(); // 3. Cargar datos
+        await dataSeeder.SeedDataAsync();    // 3. Cargar datos
     }
 }
 ```

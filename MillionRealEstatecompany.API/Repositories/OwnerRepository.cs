@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
+using MongoDB.Bson;
 using MillionRealEstatecompany.API.Data;
 using MillionRealEstatecompany.API.Interfaces;
 using MillionRealEstatecompany.API.Models;
@@ -6,82 +7,120 @@ using MillionRealEstatecompany.API.Models;
 namespace MillionRealEstatecompany.API.Repositories;
 
 /// <summary>
-/// Repositorio para las operaciones de acceso a datos de propietarios
+/// Repositorio MongoDB para operaciones con Owner
 /// </summary>
-public class OwnerRepository : Repository<Owner>, IOwnerRepository
+public class OwnerRepository : IOwnerRepository
 {
-    /// <summary>
-    /// Inicializa una nueva instancia del repositorio de propietarios
-    /// </summary>
-    /// <param name="context">Contexto de la base de datos</param>
-    public OwnerRepository(ApplicationDbContext context) : base(context)
+    private readonly IMongoCollection<Owner> _owners;
+
+    public OwnerRepository(MongoDbContext context)
     {
+        _owners = context.Owners;
     }
 
-    /// <summary>
-    /// Obtiene un propietario con sus propiedades asociadas
-    /// </summary>
-    /// <param name="id">Identificador del propietario</param>
-    /// <returns>Propietario con sus propiedades o null si no se encuentra</returns>
-    public async Task<Owner?> GetOwnerWithPropertiesAsync(int id)
+    public async Task<IEnumerable<Owner>> GetAllAsync()
     {
-        return await _dbSet
-            .Include(o => o.Properties)
-            .FirstOrDefaultAsync(o => o.IdOwner == id);
+        return await _owners.Find(_ => true).ToListAsync();
     }
 
-    /// <summary>
-    /// Obtiene todos los propietarios con sus propiedades asociadas
-    /// </summary>
-    /// <returns>Lista de propietarios con sus propiedades</returns>
-    public async Task<IEnumerable<Owner>> GetOwnersWithPropertiesAsync()
+    public async Task<Owner?> GetByIdAsync(string id)
     {
-        return await _dbSet
-            .Include(o => o.Properties)
-            .ToListAsync();
+        if (!ObjectId.TryParse(id, out var objectId))
+            return null;
+
+        return await _owners.Find(o => o.Id == id).FirstOrDefaultAsync();
     }
 
-    /// <summary>
-    /// Verifica si un propietario tiene propiedades asociadas
-    /// </summary>
-    /// <param name="ownerId">Identificador del propietario</param>
-    /// <returns>True si tiene propiedades, false en caso contrario</returns>
-    public async Task<bool> HasPropertiesAsync(int ownerId)
+    public async Task<Owner?> GetByIdOwnerAsync(int idOwner)
     {
-        return await _context.Properties
-            .AnyAsync(p => p.IdOwner == ownerId);
+        return await _owners.Find(o => o.IdOwner == idOwner).FirstOrDefaultAsync();
     }
 
-    /// <summary>
-    /// Verifica si existe un propietario con el número de documento especificado
-    /// </summary>
-    /// <param name="documentNumber">Número de documento a verificar</param>
-    /// <returns>True si existe, false en caso contrario</returns>
-    public async Task<bool> DocumentNumberExistsAsync(string documentNumber)
+    public async Task<Owner> CreateAsync(Owner owner)
     {
-        return await _context.Owners
-            .AnyAsync(o => o.DocumentNumber == documentNumber);
+        owner.IdOwner = await GetNextIdOwnerAsync();
+        owner.CreatedAt = DateTime.UtcNow;
+        owner.UpdatedAt = DateTime.UtcNow;
+        
+        await _owners.InsertOneAsync(owner);
+        return owner;
     }
 
-    /// <summary>
-    /// Obtiene un propietario por su dirección de correo electrónico
-    /// </summary>
-    /// <param name="email">Dirección de correo electrónico</param>
-    /// <returns>Propietario encontrado o null si no existe</returns>
+    public async Task<Owner?> UpdateAsync(string id, Owner owner)
+    {
+        if (!ObjectId.TryParse(id, out var objectId))
+            return null;
+
+        owner.UpdatedAt = DateTime.UtcNow;
+        
+        var result = await _owners.ReplaceOneAsync(o => o.Id == id, owner);
+        return result.MatchedCount > 0 ? owner : null;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        if (!ObjectId.TryParse(id, out var objectId))
+            return false;
+
+        var result = await _owners.DeleteOneAsync(o => o.Id == id);
+        return result.DeletedCount > 0;
+    }
+
+    public async Task<bool> DocumentNumberExistsAsync(string documentNumber, string? excludeId = null)
+    {
+        var filter = Builders<Owner>.Filter.Eq(o => o.DocumentNumber, documentNumber);
+        
+        if (!string.IsNullOrEmpty(excludeId))
+        {
+            filter = Builders<Owner>.Filter.And(filter, 
+                Builders<Owner>.Filter.Ne(o => o.Id, excludeId));
+        }
+
+        var count = await _owners.CountDocumentsAsync(filter);
+        return count > 0;
+    }
+
+    public async Task<bool> EmailExistsAsync(string email, string? excludeId = null)
+    {
+        var filter = Builders<Owner>.Filter.Eq(o => o.Email, email);
+        
+        if (!string.IsNullOrEmpty(excludeId))
+        {
+            filter = Builders<Owner>.Filter.And(filter, 
+                Builders<Owner>.Filter.Ne(o => o.Id, excludeId));
+        }
+
+        var count = await _owners.CountDocumentsAsync(filter);
+        return count > 0;
+    }
+
     public async Task<Owner?> GetByEmailAsync(string email)
     {
-        return await _context.Owners
-            .FirstOrDefaultAsync(o => o.Email == email);
+        return await _owners.Find(o => o.Email == email).FirstOrDefaultAsync();
     }
 
-    /// <summary>
-    /// Obtiene un propietario por su número de documento
-    /// </summary>
-    /// <param name="documentNumber">Número de documento del propietario</param>
-    /// <returns>Propietario encontrado o null si no existe</returns>
     public async Task<Owner?> GetByDocumentNumberAsync(string documentNumber)
     {
-        return await _context.Owners
-            .FirstOrDefaultAsync(o => o.DocumentNumber == documentNumber);
+        return await _owners.Find(o => o.DocumentNumber == documentNumber).FirstOrDefaultAsync();
+    }
+
+    public async Task<int> GetNextIdOwnerAsync()
+    {
+        var lastOwner = await _owners
+            .Find(_ => true)
+            .SortByDescending(o => o.IdOwner)
+            .FirstOrDefaultAsync();
+
+        return lastOwner?.IdOwner + 1 ?? 1;
+    }
+
+    public async Task UpdatePropertiesCountAsync(int idOwner, int count)
+    {
+        var filter = Builders<Owner>.Filter.Eq(o => o.IdOwner, idOwner);
+        var update = Builders<Owner>.Update
+            .Set(o => o.PropertiesCount, count)
+            .Set(o => o.UpdatedAt, DateTime.UtcNow);
+
+        await _owners.UpdateOneAsync(filter, update);
     }
 }
