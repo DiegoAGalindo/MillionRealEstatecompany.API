@@ -7,12 +7,13 @@ using MillionRealEstatecompany.API.DTOs;
 using MillionRealEstatecompany.API.Models;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace MillionRealEstatecompany.API.Test
 {
     /// <summary>
     /// Pruebas de integración para la API
-    /// Implementando testing de extremo a extremo siguiendo las mejores prácticas de Jez Humble
+    /// Implementando testing de extremo a extremo siguiendo las mejores prácticas.    
     /// </summary>
     [TestFixture]
     public class IntegrationTests : IDisposable
@@ -29,7 +30,6 @@ namespace MillionRealEstatecompany.API.Test
                 {
                     builder.ConfigureServices(services =>
                     {
-                        // Replace the database with in-memory database for testing
                         var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
                         if (descriptor != null)
                             services.Remove(descriptor);
@@ -38,7 +38,6 @@ namespace MillionRealEstatecompany.API.Test
                             options.UseInMemoryDatabase("TestDb"));
                     });
                     
-                    // Configure testing environment
                     builder.ConfigureAppConfiguration((context, config) =>
                     {
                         context.HostingEnvironment.EnvironmentName = "Testing";
@@ -47,11 +46,41 @@ namespace MillionRealEstatecompany.API.Test
 
             _client = _factory.CreateClient();
 
-            // Get the database context and seed test data
+            SetupAuthenticationForTests();
+
             var scope = _factory.Services.CreateScope();
             _context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             _context.Database.EnsureCreated();
             SeedTestData();
+        }
+
+        /// <summary>
+        /// Configura la autenticación para las pruebas de integración
+        /// </summary>
+        private async void SetupAuthenticationForTests()
+        {
+            var loginRequest = new
+            {
+                Username = "testmillion",
+                Password = "TestMillionPass"
+            };
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+            if (loginResponse.IsSuccessStatusCode)
+            {
+                var loginContent = await loginResponse.Content.ReadAsStringAsync();
+                var loginResult = JsonSerializer.Deserialize<JsonElement>(loginContent);
+                
+                if (loginResult.TryGetProperty("token", out var tokenProperty))
+                {
+                    var token = tokenProperty.GetString();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        _client.DefaultRequestHeaders.Authorization = 
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                }
+            }
         }
 
         [OneTimeTearDown]
@@ -133,14 +162,12 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task GetAllProperties_ShouldReturnAllProperties()
         {
-            // Act
             var response = await _client.GetAsync("/api/properties");
             var properties = await response.Content.ReadFromJsonAsync<List<PropertyDto>>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             properties.Should().NotBeNull();
-            properties.Should().HaveCountGreaterOrEqualTo(2); // At least the seeded properties
+            properties.Should().HaveCountGreaterOrEqualTo(2); 
             properties.Should().Contain(p => p.Name == "Beautiful House");
             properties.Should().Contain(p => p.Name == "Modern Apartment");
         }
@@ -148,11 +175,9 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task GetPropertyById_ShouldReturnProperty_WhenPropertyExists()
         {
-            // Act
             var response = await _client.GetAsync("/api/properties/1");
             var property = await response.Content.ReadFromJsonAsync<PropertyDto>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             property.Should().NotBeNull();
             property!.IdProperty.Should().Be(1);
@@ -162,17 +187,14 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task GetPropertyById_ShouldReturnNotFound_WhenPropertyDoesNotExist()
         {
-            // Act
             var response = await _client.GetAsync("/api/properties/999");
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         [Test]
         public async Task CreateProperty_ShouldCreateProperty_WhenValidDataProvided()
         {
-            // Arrange
             var newProperty = new CreatePropertyDto
             {
                 Name = "New Test Property",
@@ -183,18 +205,15 @@ namespace MillionRealEstatecompany.API.Test
                 IdOwner = 1
             };
 
-            // Act
             var response = await _client.PostAsJsonAsync("/api/properties", newProperty);
             var createdProperty = await response.Content.ReadFromJsonAsync<PropertyDto>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             createdProperty.Should().NotBeNull();
             createdProperty!.Name.Should().Be(newProperty.Name);
             createdProperty.Address.Should().Be(newProperty.Address);
             createdProperty.Price.Should().Be(newProperty.Price.Value);
 
-            // Verify it was actually created in the database
             var getResponse = await _client.GetAsync($"/api/properties/{createdProperty.IdProperty}");
             getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         }
@@ -202,7 +221,6 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task CreateProperty_ShouldReturnBadRequest_WhenOwnerDoesNotExist()
         {
-            // Arrange
             var newProperty = new CreatePropertyDto
             {
                 Name = "Test Property",
@@ -210,20 +228,17 @@ namespace MillionRealEstatecompany.API.Test
                 Price = 100000,
                 CodeInternal = "TEST001",
                 Year = 2023,
-                IdOwner = 999 // Non-existent owner
+                IdOwner = 999 
             };
 
-            // Act
             var response = await _client.PostAsJsonAsync("/api/properties", newProperty);
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
 
         [Test]
         public async Task UpdateProperty_ShouldUpdateProperty_WhenValidDataProvided()
         {
-            // Arrange
             var updateDto = new UpdatePropertyDto
             {
                 Name = "Updated Beautiful House",
@@ -234,11 +249,9 @@ namespace MillionRealEstatecompany.API.Test
                 IdOwner = 1
             };
 
-            // Act
             var response = await _client.PutAsJsonAsync("/api/properties/1", updateDto);
             var updatedProperty = await response.Content.ReadFromJsonAsync<PropertyDto>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             updatedProperty.Should().NotBeNull();
             updatedProperty!.Name.Should().Be(updateDto.Name);
@@ -248,7 +261,6 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task DeleteProperty_ShouldDeleteProperty_WhenPropertyExists()
         {
-            // First, create a property to delete
             var newProperty = new CreatePropertyDto
             {
                 Name = "Property to Delete",
@@ -262,13 +274,10 @@ namespace MillionRealEstatecompany.API.Test
             var createResponse = await _client.PostAsJsonAsync("/api/properties", newProperty);
             var createdProperty = await createResponse.Content.ReadFromJsonAsync<PropertyDto>();
 
-            // Act - Delete the property
             var deleteResponse = await _client.DeleteAsync($"/api/properties/{createdProperty!.IdProperty}");
 
-            // Assert
             deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
-            // Verify it was actually deleted
             var getResponse = await _client.GetAsync($"/api/properties/{createdProperty.IdProperty}");
             getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
@@ -280,11 +289,9 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task GetAllOwners_ShouldReturnAllOwners()
         {
-            // Act
             var response = await _client.GetAsync("/api/owners");
             var owners = await response.Content.ReadFromJsonAsync<List<OwnerDto>>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             owners.Should().NotBeNull();
             owners.Should().HaveCountGreaterOrEqualTo(2); // At least the seeded owners
@@ -295,11 +302,9 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task GetOwnerById_ShouldReturnOwner_WhenOwnerExists()
         {
-            // Act
             var response = await _client.GetAsync("/api/owners/1");
             var owner = await response.Content.ReadFromJsonAsync<OwnerDto>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             owner.Should().NotBeNull();
             owner!.IdOwner.Should().Be(1);
@@ -309,7 +314,6 @@ namespace MillionRealEstatecompany.API.Test
         [Test]
         public async Task CreateOwner_ShouldCreateOwner_WhenValidDataProvided()
         {
-            // Arrange
             var newOwner = new CreateOwnerDto
             {
                 Name = "New Test Owner",
@@ -319,11 +323,9 @@ namespace MillionRealEstatecompany.API.Test
                 Email = "newowner@example.com"
             };
 
-            // Act
             var response = await _client.PostAsJsonAsync("/api/owners", newOwner);
             var createdOwner = await response.Content.ReadFromJsonAsync<OwnerDto>();
 
-            // Assert
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             createdOwner.Should().NotBeNull();
             createdOwner!.Name.Should().Be(newOwner.Name);
