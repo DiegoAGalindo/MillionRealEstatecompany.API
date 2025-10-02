@@ -13,9 +13,9 @@ public class PropertyTraceService : IPropertyTraceService
 
     public PropertyTraceService(IPropertyTraceRepository propertyTraceRepository, IPropertyRepository propertyRepository, IMapper mapper)
     {
-        _propertyTraceRepository = propertyTraceRepository;
-        _propertyRepository = propertyRepository;
-        _mapper = mapper;
+        _propertyTraceRepository = propertyTraceRepository ?? throw new ArgumentNullException(nameof(propertyTraceRepository));
+        _propertyRepository = propertyRepository ?? throw new ArgumentNullException(nameof(propertyRepository));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     public async Task<IEnumerable<PropertyTraceDto>> GetTracesByPropertyIdAsync(int propertyId)

@@ -12,8 +12,8 @@ public class OwnerService : IOwnerService
 
     public OwnerService(IOwnerRepository ownerRepository, IPropertyRepository propertyRepository, IMapper mapper)
     {
-        _ownerRepository = ownerRepository;
-        _mapper = mapper;
+        _ownerRepository = ownerRepository ?? throw new ArgumentNullException(nameof(ownerRepository));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     public async Task<IEnumerable<OwnerDto>> GetAllOwnersAsync()

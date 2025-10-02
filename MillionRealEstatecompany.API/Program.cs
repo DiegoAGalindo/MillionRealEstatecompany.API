@@ -47,6 +47,9 @@ builder.Services.AddScoped<IPropertyService, PropertyService>();
 builder.Services.AddScoped<IOwnerService, OwnerService>();
 builder.Services.AddScoped<IPropertyTraceService, PropertyTraceService>();
 
+// Registro del DataSeeder para datos de prueba
+builder.Services.AddScoped<IDataSeeder, DataSeeder>();
+
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -97,7 +100,9 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Health Checks
-builder.Services.AddHealthChecks();
+builder.Services.AddScoped<MongoDbHealthCheck>();
+builder.Services.AddHealthChecks()
+    .AddCheck<MongoDbHealthCheck>("mongodb");
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -166,9 +171,27 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
         c.RoutePrefix = "swagger";
     });
 
-    // MongoDB se conecta automáticamente, no necesita migración
+    // Inicializar datos de prueba en MongoDB
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            var scopeLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            var dataSeeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+            
+            scopeLogger.LogInformation("Checking if data seeding is needed...");
+            await dataSeeder.SeedDataAsync();
+            scopeLogger.LogInformation("Data seeding process completed");
+        }
+        catch (Exception ex)
+        {
+            var errorLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            errorLogger.LogError(ex, "An error occurred while seeding the database");
+        }
+    }
+
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogInformation("Million Real Estate API started with MongoDB");
+    logger.LogInformation("Million Real Estate API started with MongoDB and test data");
 }
 
 // Health check endpoints
@@ -177,6 +200,8 @@ app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
+
+/// <summary>
 /// Partial Program class to enable integration testing
 /// </summary>
 public partial class Program { }

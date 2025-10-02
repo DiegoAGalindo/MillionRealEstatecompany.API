@@ -15,6 +15,7 @@ public class PropertyTraceRepository : IPropertyTraceRepository
 
     public PropertyTraceRepository(MongoDbContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
         _propertyTraces = context.PropertyTraces;
     }
 

@@ -198,7 +198,7 @@ namespace MillionRealEstatecompany.API.Test
             {
                 Name = "John Doe",
                 Address = "123 Main St",
-                Birthday = new DateOnly(1985, 1, 1),
+                Birthday = new DateTime(1985, 1, 1),
                 DocumentNumber = "12345678",
                 Email = "john@example.com"
             };
@@ -207,7 +207,7 @@ namespace MillionRealEstatecompany.API.Test
                 IdOwner = 1,
                 Name = "John Doe",
                 Address = "123 Main St",
-                Birthday = new DateOnly(1985, 1, 1),
+                Birthday = new DateTime(1985, 1, 1),
                 DocumentNumber = "12345678",
                 Email = "john@example.com"
             };

@@ -15,6 +15,7 @@ public class OwnerRepository : IOwnerRepository
 
     public OwnerRepository(MongoDbContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
         _owners = context.Owners;
     }
 

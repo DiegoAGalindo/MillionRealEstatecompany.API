@@ -58,7 +58,7 @@ namespace MillionRealEstatecompany.API.Test
         public void Constructor_ShouldThrowArgumentNullException_WhenRepositoryIsNull()
         {
             // Act & Assert
-            Action act = () => new OwnerService(null, _mockPropertyRepository.Object, _mockMapper.Object);
+            Action act = () => new OwnerService(default!, _mockPropertyRepository.Object, _mockMapper.Object);
             
             act.Should().Throw<ArgumentNullException>();
         }

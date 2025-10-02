@@ -16,9 +16,9 @@ public class PropertyService : IPropertyService
 
     public PropertyService(IPropertyRepository propertyRepository, IOwnerRepository ownerRepository, IMapper mapper)
     {
-        _propertyRepository = propertyRepository;
-        _ownerRepository = ownerRepository;
-        _mapper = mapper;
+        _propertyRepository = propertyRepository ?? throw new ArgumentNullException(nameof(propertyRepository));
+        _ownerRepository = ownerRepository ?? throw new ArgumentNullException(nameof(ownerRepository));
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     public async Task<IEnumerable<PropertyDto>> GetAllPropertiesAsync()

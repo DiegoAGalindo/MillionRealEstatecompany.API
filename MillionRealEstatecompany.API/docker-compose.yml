@@ -6,9 +6,9 @@ services:
     depends_on:
       - mongodb
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ASPNETCORE_URLS=${ASPNETCORE_URLS}
-      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+      - MongoDbSettings__ConnectionString=mongodb://admin:password123@mongodb:27017
       - MongoDbSettings__DatabaseName=millionrealestatedb
     networks:
       - million-network

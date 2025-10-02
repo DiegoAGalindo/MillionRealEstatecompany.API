@@ -12,24 +12,11 @@ namespace MillionRealEstatecompany.API.Test
     [TestFixture]
     public class PropertyRepositoryTests
     {
-        private Mock<MongoDbContext> _mockContext;
-        private Mock<IMongoCollection<Property>> _mockCollection;
-        private PropertyRepository _repository;
-
-        [SetUp]
-        public void Setup()
-        {
-            _mockContext = new Mock<MongoDbContext>();
-            _mockCollection = new Mock<IMongoCollection<Property>>();
-            _mockContext.Setup(x => x.Properties).Returns(_mockCollection.Object);
-            _repository = new PropertyRepository(_mockContext.Object);
-        }
-
         [Test]
         public void Constructor_ShouldThrowArgumentNullException_WhenContextIsNull()
         {
             // Act & Assert
-            Action act = () => new PropertyRepository(null);
+            Action act = () => new PropertyRepository(default!);
             
             act.Should().Throw<ArgumentNullException>();
         }

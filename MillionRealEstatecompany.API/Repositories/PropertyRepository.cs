@@ -16,6 +16,7 @@ public class PropertyRepository : IPropertyRepository
 
     public PropertyRepository(MongoDbContext context)
     {
+        ArgumentNullException.ThrowIfNull(context);
         _properties = context.Properties;
     }
 

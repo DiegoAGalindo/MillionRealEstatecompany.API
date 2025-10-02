@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using MongoDB.Bson;
 using MillionRealEstatecompany.API.Models;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace MillionRealEstatecompany.API.Data;
 
@@ -10,14 +12,32 @@ namespace MillionRealEstatecompany.API.Data;
 public class MongoDbContext
 {
     private readonly IMongoDatabase _database;
+    private readonly ILogger<MongoDbContext>? _logger;
 
-    public MongoDbContext(IOptions<MongoDbSettings> settings)
+    public MongoDbContext(IOptions<MongoDbSettings> settings, ILogger<MongoDbContext>? logger = null)
     {
-        var client = new MongoClient(settings.Value.ConnectionString);
-        _database = client.GetDatabase(settings.Value.DatabaseName);
+        _logger = logger;
         
-        // Configurar índices al inicializar
-        ConfigureIndexes();
+        try
+        {
+            _logger?.LogInformation("Connecting to MongoDB with connection string: {ConnectionString}", 
+                settings.Value.ConnectionString?.Replace(":password123@", ":***@"));
+            
+            var client = new MongoClient(settings.Value.ConnectionString);
+            _database = client.GetDatabase(settings.Value.DatabaseName);
+            
+            _logger?.LogInformation("Connected to MongoDB database: {DatabaseName}", settings.Value.DatabaseName);
+            
+            // Configurar índices al inicializar
+            ConfigureIndexes();
+            
+            _logger?.LogInformation("MongoDB indexes configured successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to connect to MongoDB");
+            throw;
+        }
     }
 
     /// <summary>
@@ -34,6 +54,24 @@ public class MongoDbContext
     /// Colección de Trazas de Propiedades
     /// </summary>
     public IMongoCollection<PropertyTrace> PropertyTraces => _database.GetCollection<PropertyTrace>("propertytraces");
+
+    /// <summary>
+    /// Verifica la conexión a MongoDB
+    /// </summary>
+    public async Task<bool> TestConnectionAsync()
+    {
+        try
+        {
+            await _database.RunCommandAsync((Command<BsonDocument>)"{ping:1}");
+            _logger?.LogInformation("MongoDB connection test successful");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "MongoDB connection test failed");
+            return false;
+        }
+    }
 
     /// <summary>
     /// Configura índices para optimizar las consultas
@@ -88,5 +126,33 @@ public class MongoDbContext
             tracesIndexes.Descending(pt => pt.DateSale),
             new CreateIndexOptions { Name = "idx_trace_date" }
         ));
+    }
+}
+
+/// <summary>
+/// Health check para MongoDB
+/// </summary>
+public class MongoDbHealthCheck : IHealthCheck
+{
+    private readonly MongoDbContext _context;
+
+    public MongoDbHealthCheck(MongoDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var isHealthy = await _context.TestConnectionAsync();
+            return isHealthy 
+                ? HealthCheckResult.Healthy("MongoDB is responding normally")
+                : HealthCheckResult.Unhealthy("MongoDB is not responding");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("MongoDB health check failed", ex);
+        }
     }
 }
